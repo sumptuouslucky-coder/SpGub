@@ -117,6 +117,24 @@
     .stat-val { font-size: 1.4rem; font-weight: 800; color: var(--accent-cyan); margin-top: 4px; }
     .stat-lbl { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; }
 
+    .profile-card { text-align: center; }
+    .profile-avatar-wrap { position: relative; width: 76px; height: 76px; margin: 0 auto 10px; }
+    .profile-avatar { width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: grid; place-items: center; font-size: 1.7rem; font-weight: 800; color: #fff; border: 3px solid rgba(255,255,255,0.12); }
+    .avatar-coming { position: absolute; right: -8px; bottom: -2px; border: 1px solid var(--card-border); background: #161e31; color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; }
+    .profile-name { font-size: 1.2rem; font-weight: 800; }
+    .profile-email { color: var(--text-muted); font-size: 0.78rem; margin-top: 4px; word-break: break-all; }
+    .profile-meta { color: var(--text-muted); font-size: 0.76rem; margin-top: 7px; }
+    .profile-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+    .small-action { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: var(--text); padding: 9px 8px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.78rem; }
+    .section-title { font-size: 0.95rem; font-weight: 800; margin: 18px 0 10px; }
+    .post-performance { background: rgba(15, 23, 42, 0.75); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+    .performance-question { font-size: 0.88rem; font-weight: 800; line-height: 1.35; margin-bottom: 8px; }
+    .performance-row { display: flex; justify-content: space-between; gap: 8px; color: var(--text-muted); font-size: 0.74rem; font-weight: 700; }
+    .performance-bars { display: grid; gap: 6px; margin-top: 8px; }
+    .mini-bar-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; font-size: 0.72rem; color: var(--text-muted); }
+    .mini-bar { height: 7px; background: #0b1220; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); }
+    .mini-bar > span { display: block; height: 100%; background: linear-gradient(90deg, #2563eb, #06b6d4); }
+    .empty-state { text-align: center; padding: 20px 10px; color: var(--text-muted); font-size: 0.82rem; line-height: 1.5; }
     .support-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--accent-green); color: var(--accent-green); padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.9rem; margin-top: 12px; }
   </style>
 </head>
@@ -124,7 +142,8 @@
 
   <header>
     <div class="logo">sp<span>Gub</span></div>
-    <div class="header-actions">
+    <div class="header-actions" style="display:flex; align-items:center; gap:7px;">
+      <button onclick="showComingSoon('💬 Chat is coming soon!')" title="Chat" style="padding:6px 9px;">💬</button>
       <button id="authHeaderBtn" onclick="openAuthModal()">Sign Up / Login</button>
     </div>
   </header>
@@ -168,18 +187,32 @@
   </section>
 
   <section id="view-dashboard" class="view-section">
-    <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 14px;">📊 Profile & Followers</h2>
-    <div class="card">
-      <div class="stats-grid">
-        <div class="stat-box">
-          <div class="stat-lbl">FOLLOWERS</div>
-          <div class="stat-val" id="followerCount">0</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-lbl">FOLLOWING</div>
-          <div class="stat-val" id="followingCount">0</div>
-        </div>
+    <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 14px;">👤 My Profile</h2>
+    <div class="card profile-card">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar" id="profileAvatar">G</div>
+        <button class="avatar-coming" onclick="showComingSoon('👤 Profile pictures are coming soon!')" title="Profile picture">📷</button>
       </div>
+      <div class="profile-name" id="profileName">Guest</div>
+      <div class="profile-email" id="profileEmail">Sign in to see your account details</div>
+      <div class="profile-meta" id="profileMeta">Create an account to track your posts, votes, followers and following.</div>
+      <div class="profile-actions">
+        <button class="small-action" onclick="showComingSoon('💬 Chat is coming soon!')">💬 Chat</button>
+        <button class="small-action" onclick="showComingSoon('👤 Profile pictures are coming soon!')">📷 Profile Photo</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-top:0;">📈 Your Numbers</div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-lbl">POSTS</div><div class="stat-val" id="myPostCount">0</div></div>
+        <div class="stat-box"><div class="stat-lbl">TOTAL VOTES</div><div class="stat-val" id="myTotalVotes">0</div></div>
+        <div class="stat-box"><div class="stat-lbl">FOLLOWERS</div><div class="stat-val" id="followerCount">0</div></div>
+        <div class="stat-box"><div class="stat-lbl">FOLLOWING</div><div class="stat-val" id="followingCount">0</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-top:0;">📝 My Posts & Performance</div>
+      <div id="myPostsPerformance"><div class="empty-state">Log in to see how your posts are performing.</div></div>
     </div>
   </section>
 
@@ -259,8 +292,18 @@
         <label>Option 2</label>
         <input type="text" id="postOpt2" placeholder="No, location matters" />
       </div>
+      <button class="small-action" style="width:100%; margin-top:2px;" onclick="showComingSoon('📷 Image upload is coming soon!')">📷 Add Image <span style="color:var(--text-muted);">(Coming soon)</span></button>
       <button class="modal-btn" onclick="submitNewPost()">Publish Dilemma</button>
       <button class="modal-cancel-btn" onclick="closeCreateModal()">Cancel</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="comingSoonModal">
+    <div class="modal-content">
+      <div style="font-size:2rem; margin-bottom:8px;">🚧</div>
+      <h3 style="font-size:1.15rem; font-weight:800; margin-bottom:8px;">Coming soon</h3>
+      <p id="comingSoonText" style="color:var(--text-muted); font-size:0.85rem; line-height:1.5;">This feature is being prepared.</p>
+      <button class="modal-btn" onclick="closeComingSoon()">Okay</button>
     </div>
   </div>
 
@@ -276,6 +319,7 @@
       document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
       document.getElementById('view-' + tabName).classList.add('active');
       el.classList.add('active');
+      if (tabName === 'dashboard') renderProfileDetails();
     }
 
     function openAuthModal() { document.getElementById('authModal').classList.add('open'); }
@@ -402,6 +446,130 @@
       }
     }
 
+    function showComingSoon(message) {
+      document.getElementById('comingSoonText').innerText = message || "This feature is being prepared.";
+      document.getElementById('comingSoonModal').classList.add('open');
+    }
+
+    function closeComingSoon() {
+      document.getElementById('comingSoonModal').classList.remove('open');
+    }
+
+    function getInitial(username) {
+      const clean = String(username || '').replace('@', '').trim();
+      return (clean.charAt(0) || 'G').toUpperCase();
+    }
+
+    function renderProfileDetails() {
+      const nameEl = document.getElementById('profileName');
+      const emailEl = document.getElementById('profileEmail');
+      const metaEl = document.getElementById('profileMeta');
+      const avatarEl = document.getElementById('profileAvatar');
+
+      if (!currentUserData) {
+        nameEl.innerText = 'Guest';
+        emailEl.innerText = 'Sign in to see your account details';
+        metaEl.innerText = 'Create an account to track your posts, votes, followers and following.';
+        avatarEl.innerText = 'G';
+        document.getElementById('followerCount').innerText = '0';
+        document.getElementById('followingCount').innerText = '0';
+        document.getElementById('myPostCount').innerText = '0';
+        document.getElementById('myTotalVotes').innerText = '0';
+        document.getElementById('myPostsPerformance').innerHTML =
+          '<div class="empty-state">Log in to see how your posts are performing.</div>';
+        return;
+      }
+
+      nameEl.innerText = currentUserData.username || '@user';
+      emailEl.innerText = currentUserData.email || '';
+      const languageNames = { en:'English', es:'Español', fr:'Français', pt:'Português', de:'Deutsch' };
+      metaEl.innerText = 'Language: ' + (languageNames[currentUserData.language] || 'English');
+      avatarEl.innerText = getInitial(currentUserData.username);
+
+      document.getElementById('followerCount').innerText = currentUserData.followersCount || 0;
+      document.getElementById('followingCount').innerText = currentUserData.followingCount || 0;
+      loadMyPostsPerformance();
+    }
+
+    async function loadMyPostsPerformance() {
+      const container = document.getElementById('myPostsPerformance');
+      if (!currentUserData || !window.db) {
+        container.innerHTML = '<div class="empty-state">Log in to see your posts.</div>';
+        return;
+      }
+
+      try {
+        const q = window.query(
+          window.collection(window.db, "posts"),
+          window.where("authorUid", "==", currentUserData.uid)
+        );
+
+        const snap = await window.getDocs(q);
+        const posts = [];
+        let totalVotes = 0;
+
+        snap.forEach(docSnap => {
+          const p = docSnap.data();
+          const votes1 = Number(p.votesOpt1 || 0);
+          const votes2 = Number(p.votesOpt2 || 0);
+          const total = votes1 + votes2;
+          totalVotes += total;
+          posts.push({ id: docSnap.id, ...p, votes1, votes2, total });
+        });
+
+        posts.sort((a, b) => {
+          const aTime = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+          const bTime = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+          return bTime - aTime;
+        });
+
+        document.getElementById('myPostCount').innerText = posts.length;
+        document.getElementById('myTotalVotes').innerText = totalVotes;
+
+        if (!posts.length) {
+          container.innerHTML = '<div class="empty-state">You have not posted anything yet.<br>Create your first dilemma and start the conversation.</div>';
+          return;
+        }
+
+        container.innerHTML = posts.slice(0, 20).map(post => {
+          const pct1 = post.total ? Math.round((post.votes1 / post.total) * 100) : 0;
+          const pct2 = post.total ? Math.round((post.votes2 / post.total) * 100) : 0;
+          const question = String(post.question || 'Untitled post')
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+          return `
+            <div class="post-performance">
+              <div class="performance-question">${question}</div>
+              <div class="performance-row">
+                <span>📊 ${post.total} total vote${post.total === 1 ? '' : 's'}</span>
+                <span>Post #${post.id.slice(0, 5)}</span>
+              </div>
+              <div class="performance-bars">
+                <div class="mini-bar-row">
+                  <div>
+                    <div style="margin-bottom:3px;">🔵 ${String(post.option1 || 'Option 1')}</div>
+                    <div class="mini-bar"><span style="width:${pct1}%"></span></div>
+                  </div>
+                  <strong>${pct1}%</strong>
+                </div>
+                <div class="mini-bar-row">
+                  <div>
+                    <div style="margin-bottom:3px;">🔴 ${String(post.option2 || 'Option 2')}</div>
+                    <div class="mini-bar"><span style="width:${pct2}%"></span></div>
+                  </div>
+                  <strong>${pct2}%</strong>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        console.log("Profile posts error:", e);
+        container.innerHTML = '<div class="empty-state">Your profile is ready, but your post performance could not be loaded yet. Check your Firebase rules.</div>';
+      }
+    }
+
     async function searchUsers(searchTerm) {
       const resultsDiv = document.getElementById('searchResults');
       if (!searchTerm || searchTerm.length < 2) {
@@ -434,6 +602,8 @@
         langSelect.value = deviceLang;
       }
 
+      renderProfileDetails();
+
       setTimeout(() => {
         if (window.auth) {
           window.onAuthStateChanged(window.auth, async (user) => {
@@ -449,9 +619,11 @@
                 document.getElementById('followerCount').innerText = currentUserData.followersCount || 0;
                 document.getElementById('followingCount').innerText = currentUserData.followingCount || 0;
                 document.getElementById('inviteCodeDisplay').innerText = window.location.origin + window.location.pathname + "?ref=" + (currentUserData.referralCode || '');
+                renderProfileDetails();
               }
             } else {
               currentUserData = null;
+              renderProfileDetails();
               document.getElementById('currentUserLabel').innerText = "👤 Guest Mode (Tap to save account)";
               document.getElementById('authHeaderBtn').innerText = "Sign Up / Login";
               document.getElementById('authHeaderBtn').onclick = openAuthModal;
