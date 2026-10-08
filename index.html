@@ -1,722 +1,601 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>spGub — The Global Hub</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>spGub — See What the World Thinks</title>
+<meta name="theme-color" content="#070b14">
+<meta name="description" content="spGub — global questions, opinions, discoveries and participation.">
 
-  <!-- Firebase Modular SDKs (v10.8.0) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, doc, setDoc, getDoc, updateDoc, increment, query, where, getDocs, orderBy, limit, onSnapshot, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import {
+    getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
+    getFirestore, collection, addDoc, doc, setDoc, getDoc, updateDoc,
+    increment, query, where, getDocs, orderBy, limit, onSnapshot,
+    serverTimestamp, deleteDoc, runTransaction
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDlxzDQvFUgZ1R31GAAZs1vaOV1LuLFNhs",
-      authDomain: "split-8bfe2.firebaseapp.com",
-      projectId: "split-8bfe2",
-      storageBucket: "split-8bfe2.firebasestorage.app",
-      messagingSenderId: "840439219244",
-      appId: "1:840439219244:web:b05119f1a3d9d96d9cbd89",
-      measurementId: "G-DRDQ9LV5X6"
-    };
+const firebaseConfig = {
+    apiKey: "AIzaSyDlxzDQvFUgZ1R31GAAZs1vaOV1LuLFNhs",
+    authDomain: "split-8bfe2.firebaseapp.com",
+    projectId: "split-8bfe2",
+    storageBucket: "split-8bfe2.firebasestorage.app",
+    messagingSenderId: "840439219244",
+    appId: "1:840439219244:web:b05119f1a3d9d96d9cbd89",
+    measurementId: "G-DRDQ9LV5X6"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    window.auth = auth;
-    window.db = db;
-    window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-    window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-    window.onAuthStateChanged = onAuthStateChanged;
-    window.signOut = signOut;
-    window.addDoc = addDoc;
-    window.collection = collection;
-    window.doc = doc;
-    window.setDoc = setDoc;
-    window.getDoc = getDoc;
-    window.updateDoc = updateDoc;
-    window.increment = increment;
-    window.query = query;
-    window.where = where;
-    window.getDocs = getDocs;
-    window.orderBy = orderBy;
-    window.limit = limit;
-    window.onSnapshot = onSnapshot;
-    window.serverTimestamp = serverTimestamp;
-    window.deleteDoc = deleteDoc;
-  </script>
+Object.assign(window, {
+    auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    onAuthStateChanged, signOut, addDoc, collection, doc, setDoc, getDoc,
+    updateDoc, increment, query, where, getDocs, orderBy, limit,
+    onSnapshot, serverTimestamp, deleteDoc, runTransaction
+});
+</script>
 
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-
-    :root {
-      --bg: #090d16;
-      --card-bg: rgba(22, 30, 49, 0.7);
-      --card-border: rgba(255, 255, 255, 0.12);
-      --accent-blue: #3b82f6;
-      --accent-cyan: #06b6d4;
-      --accent-green: #10b981;
-      --gold: #fbbf24;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; max-width: 480px; margin: 0 auto; border-left: 1px solid var(--card-border); border-right: 1px solid var(--card-border); min-height: 100vh; position: relative; }
-
-    header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: rgba(9, 13, 22, 0.85); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--card-border); }
-    .logo { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-    .logo span { background: linear-gradient(135deg, #3b82f6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .header-actions button { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); color: var(--text); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
-
-    .user-status-bar { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; font-weight: 700; }
-
-    .search-box { padding: 10px 16px; background: #0f172a; border-bottom: 1px solid var(--card-border); }
-    .search-box input { width: 100%; background: #161e31; border: 1px solid var(--card-border); padding: 10px 14px; border-radius: 20px; color: #fff; font-size: 0.85rem; outline: none; }
-
-    .view-section { display: none; padding: 16px; }
-    .view-section.active { display: block; }
-
-    .card { background: var(--card-bg); border-radius: 16px; padding: 16px; margin-bottom: 16px; border: 1px solid var(--card-border); }
-    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .user-info { display: flex; align-items: center; gap: 10px; }
-    .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: grid; place-items: center; font-weight: 800; color: #fff; }
-    .username { font-weight: 700; font-size: 0.92rem; }
-
-    .follow-btn { background: var(--accent-blue); border: none; color: #fff; padding: 4px 12px; border-radius: 14px; font-weight: 700; font-size: 0.75rem; cursor: pointer; }
-    .follow-btn.following { background: rgba(255,255,255,0.1); color: var(--text-muted); border: 1px solid var(--card-border); }
-
-    .question { font-size: 1.05rem; font-weight: 700; margin-bottom: 14px; line-height: 1.4; color: #f1f5f9; }
-
-    .option-btn { width: 100%; text-align: left; background: #0f172a; border: 1.5px solid var(--card-border); border-radius: 12px; padding: 14px; margin-bottom: 10px; color: var(--text); position: relative; overflow: hidden; cursor: pointer; display: block; outline: none; }
-    .option-btn.voted { border-color: var(--accent-cyan) !important; background: rgba(6, 182, 212, 0.1); }
-    .option-btn .bar { position: absolute; top: 0; left: 0; bottom: 0; background: linear-gradient(90deg, #2563eb, #06b6d4); width: 0%; transition: width 0.4s ease; z-index: 1; opacity: 0.85; }
-    .option-content { position: relative; z-index: 2; display: flex; justify-content: space-between; font-weight: 700; font-size: 0.92rem; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
-
-    .card-footer { display: flex; justify-content: space-between; margin-top: 14px; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; font-weight: 600; }
-    .share-btn { background: none; border: none; color: var(--accent-cyan); font-weight: 700; cursor: pointer; font-size: 0.8rem; }
-
-    nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: rgba(9, 13, 22, 0.9); backdrop-filter: blur(12px); border-top: 1px solid var(--card-border); display: flex; justify-content: space-around; padding: 12px 0; z-index: 100; }
-    .nav-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; font-size: 0.75rem; gap: 4px; cursor: pointer; width: 25%; font-weight: 600; }
-    .nav-item.active { color: var(--accent-blue); font-weight: 800; }
-
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); z-index: 200; place-items: center; padding: 20px; }
-    .modal-overlay.open { display: grid; }
-    .modal-content { background: #161e31; padding: 22px; border-radius: 20px; border: 1px solid var(--card-border); text-align: center; max-width: 360px; width: 100%; }
-    .modal-btn { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; width: 100%; padding: 13px; border-radius: 10px; font-weight: 700; margin-top: 10px; cursor: pointer; }
-    .modal-cancel-btn { background: transparent; color: var(--text-muted); border: none; width: 100%; padding: 8px; margin-top: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
-
-    .fab-create { position: fixed; bottom: 85px; right: 20px; z-index: 99; background: linear-gradient(135deg, #3b82f6, #06b6d4); color: white; border: none; padding: 14px 22px; border-radius: 30px; font-weight: 800; font-size: 0.95rem; box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4); cursor: pointer; }
-    .form-group { text-align: left; margin-bottom: 14px; }
-    .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 700; }
-    .form-group input, .form-group textarea, .form-group select { width: 100%; background: #0f172a; border: 1px solid var(--card-border); border-radius: 10px; padding: 12px; color: var(--text); font-size: 0.9rem; outline: none; }
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
-    .stat-box { background: rgba(15, 23, 42, 0.8); border: 1px solid var(--card-border); padding: 12px; border-radius: 12px; text-align: center; }
-    .stat-val { font-size: 1.4rem; font-weight: 800; color: var(--accent-cyan); margin-top: 4px; }
-    .stat-lbl { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; }
-
-    .profile-card { text-align: center; }
-    .profile-avatar-wrap { position: relative; width: 76px; height: 76px; margin: 0 auto 10px; }
-    .profile-avatar { width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: grid; place-items: center; font-size: 1.7rem; font-weight: 800; color: #fff; border: 3px solid rgba(255,255,255,0.12); }
-    .avatar-coming { position: absolute; right: -8px; bottom: -2px; border: 1px solid var(--card-border); background: #161e31; color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; }
-    .profile-name { font-size: 1.2rem; font-weight: 800; }
-    .profile-email { color: var(--text-muted); font-size: 0.78rem; margin-top: 4px; word-break: break-all; }
-    .profile-meta { color: var(--text-muted); font-size: 0.76rem; margin-top: 7px; }
-    .profile-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
-    .small-action { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: var(--text); padding: 9px 8px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.78rem; }
-    .section-title { font-size: 0.95rem; font-weight: 800; margin: 18px 0 10px; }
-    .post-performance { background: rgba(15, 23, 42, 0.75); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
-    .performance-question { font-size: 0.88rem; font-weight: 800; line-height: 1.35; margin-bottom: 8px; }
-    .performance-row { display: flex; justify-content: space-between; gap: 8px; color: var(--text-muted); font-size: 0.74rem; font-weight: 700; }
-    .performance-bars { display: grid; gap: 6px; margin-top: 8px; }
-    .mini-bar-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; font-size: 0.72rem; color: var(--text-muted); }
-    .mini-bar { height: 7px; background: #0b1220; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); }
-    .mini-bar > span { display: block; height: 100%; background: linear-gradient(90deg, #2563eb, #06b6d4); }
-    .empty-state { text-align: center; padding: 20px 10px; color: var(--text-muted); font-size: 0.82rem; line-height: 1.5; }
-    .support-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--accent-green); color: var(--accent-green); padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.9rem; margin-top: 12px; }
-  </style>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{margin:0 auto;max-width:480px;min-height:100vh;color:#f8fafc;background:radial-gradient(circle at 20% -10%,rgba(59,130,246,.20),transparent 35%),radial-gradient(circle at 100% 20%,rgba(139,92,246,.14),transparent 35%),#070b14;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding-bottom:92px;overflow-x:hidden}
+:root{--border:rgba(255,255,255,.09);--muted:#94a3b8}
+header{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:14px 17px;background:rgba(7,11,20,.88);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
+.logo{font-size:1.42rem;font-weight:900;letter-spacing:-.8px}.logo span{background:linear-gradient(135deg,#60a5fa,#22d3ee,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-actions{display:flex;align-items:center;gap:7px}.icon-button{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.05);color:white;cursor:pointer;font-size:1rem}.account-button{border:1px solid rgba(59,130,246,.35);background:rgba(59,130,246,.12);color:#93c5fd;padding:8px 12px;border-radius:20px;font-size:.75rem;font-weight:800;cursor:pointer}
+.user-bar{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(90deg,rgba(59,130,246,.09),rgba(6,182,212,.04));border-bottom:1px solid var(--border);font-size:.75rem}.user-location{color:var(--muted);font-weight:700}
+.search-area{padding:12px 15px 4px}.search-input{width:100%;border:1px solid var(--border);background:rgba(255,255,255,.045);color:white;padding:12px 15px;border-radius:15px;outline:none;font-size:.84rem}.search-input:focus{border-color:rgba(59,130,246,.6)}.search-results{margin-top:6px}
+.view{display:none;padding:14px;animation:fadeIn .25s ease}.view.active{display:block}@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.hero{position:relative;overflow:hidden;min-height:210px;padding:21px;border-radius:25px;margin-bottom:15px;background:radial-gradient(circle at 90% 10%,rgba(34,211,238,.22),transparent 32%),radial-gradient(circle at 0% 100%,rgba(139,92,246,.28),transparent 40%),linear-gradient(135deg,#111d34,#0b1220);border:1px solid rgba(255,255,255,.1);box-shadow:0 20px 55px rgba(0,0,0,.25)}
+.hero-globe{position:absolute;right:-30px;top:22px;width:170px;height:170px;border-radius:50%;border:1px solid rgba(96,165,250,.18);box-shadow:0 0 50px rgba(59,130,246,.12)}.hero-globe:before,.hero-globe:after{content:"";position:absolute;inset:20px;border-radius:50%;border:1px solid rgba(96,165,250,.15)}.hero-globe:after{inset:0 45px;border-radius:50%}
+.hero-kicker{position:relative;z-index:2;color:#67e8f9;font-size:.72rem;font-weight:900;text-transform:uppercase;letter-spacing:1.2px}.hero h1{position:relative;z-index:2;font-size:1.7rem;line-height:1.08;max-width:285px;margin-top:8px;letter-spacing:-.7px}.hero p{position:relative;z-index:2;max-width:280px;margin-top:10px;color:#a8b6cc;font-size:.82rem;line-height:1.45}.hero-button{position:relative;z-index:3;margin-top:15px;padding:10px 15px;border:0;border-radius:13px;background:white;color:#0b1220;font-weight:900;cursor:pointer}
+.section-heading{display:flex;justify-content:space-between;align-items:end;margin:20px 2px 10px}.section-heading h2{font-size:1rem;font-weight:900}.section-heading span{color:var(--muted);font-size:.68rem;font-weight:700}
+.discovery-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.discovery-card{min-height:105px;padding:15px;border-radius:19px;border:1px solid var(--border);background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.025));cursor:pointer;position:relative;overflow:hidden}.discovery-card:active{transform:scale(.98)}.discovery-icon{font-size:1.55rem;margin-bottom:9px}.discovery-card h3{font-size:.83rem;font-weight:900}.discovery-card p{color:var(--muted);font-size:.67rem;margin-top:3px}.discovery-glow{position:absolute;width:65px;height:65px;border-radius:50%;right:-22px;bottom:-25px;background:rgba(59,130,246,.15)}
+.pulse-card{padding:18px;border-radius:23px;background:linear-gradient(135deg,rgba(59,130,246,.18),rgba(139,92,246,.13));border:1px solid rgba(96,165,250,.2);margin-bottom:15px}.pulse-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}.pulse-label{font-size:.68rem;font-weight:900;color:#67e8f9;letter-spacing:.8px}.live-pill{font-size:.62rem;color:#86efac;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:20px;padding:5px 8px;font-weight:900}.pulse-question{font-size:1.12rem;line-height:1.35;font-weight:900}.pulse-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:15px}.pulse-option{padding:13px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.16);color:white;font-weight:800;cursor:pointer}.pulse-result{margin-top:12px;display:none}.pulse-result.show{display:block}.result-bar{height:9px;border-radius:20px;overflow:hidden;background:rgba(255,255,255,.08);margin-top:5px}.result-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#22d3ee)}
+.card{background:linear-gradient(145deg,rgba(22,31,48,.92),rgba(13,20,33,.92));border:1px solid var(--border);border-radius:21px;padding:16px;margin-bottom:13px}.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.user-info{display:flex;align-items:center;gap:9px}.avatar{width:39px;height:39px;border-radius:50%;display:grid;place-items:center;font-weight:900;background:linear-gradient(135deg,#2563eb,#8b5cf6);color:white}.username{font-size:.82rem;font-weight:900}.country-label{color:var(--muted);font-size:.64rem;margin-top:2px}.follow-btn{padding:7px 10px;border-radius:13px;border:1px solid rgba(59,130,246,.35);background:rgba(59,130,246,.12);color:#93c5fd;font-size:.68rem;font-weight:900;cursor:pointer}.follow-btn.following{background:rgba(255,255,255,.05);color:var(--muted);border-color:var(--border)}
+.question{font-size:1rem;line-height:1.45;font-weight:850;margin-bottom:13px}.option-btn{width:100%;position:relative;overflow:hidden;text-align:left;padding:13px;margin-bottom:8px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:#0c1422;color:white;cursor:pointer}.option-btn:active{transform:scale(.99)}.option-bar{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,rgba(59,130,246,.25),rgba(6,182,212,.16));transition:width .45s ease}.option-content{position:relative;z-index:2;display:flex;justify-content:space-between;gap:10px;font-size:.78rem;font-weight:800}.card-footer{display:flex;justify-content:space-between;align-items:center;padding-top:10px;margin-top:8px;border-top:1px solid rgba(255,255,255,.055);color:var(--muted);font-size:.68rem;font-weight:700}.share-btn{border:0;background:none;color:#67e8f9;font-weight:900;cursor:pointer}
+.trending-card{padding:14px;border-radius:18px;background:rgba(255,255,255,.035);border:1px solid var(--border);margin-bottom:8px;cursor:pointer}.trending-number{color:#60a5fa;font-weight:900;font-size:.72rem}.trending-title{margin-top:4px;font-size:.82rem;line-height:1.35;font-weight:800}
+.profile-card{text-align:center}.profile-avatar{width:82px;height:82px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;background:linear-gradient(135deg,#2563eb,#8b5cf6);font-size:1.7rem;font-weight:900;border:3px solid rgba(255,255,255,.09)}.profile-name{font-size:1.15rem;font-weight:900}.profile-email{color:var(--muted);font-size:.7rem;margin-top:3px;word-break:break-all}.profile-country{margin-top:7px;color:#93c5fd;font-size:.72rem;font-weight:800}.profile-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.small-action{padding:10px;border-radius:13px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:white;font-size:.7rem;font-weight:800;cursor:pointer}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.stat-box{padding:13px 8px;border-radius:15px;background:rgba(255,255,255,.035);border:1px solid var(--border);text-align:center}.stat-label{color:var(--muted);font-size:.61rem;font-weight:900}.stat-value{margin-top:4px;font-size:1.35rem;font-weight:900;color:#67e8f9}
+.impact-card{border-radius:22px;padding:18px;background:linear-gradient(135deg,rgba(251,191,36,.13),rgba(139,92,246,.12));border:1px solid rgba(251,191,36,.15)}.badge{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:20px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.22);color:#fde68a;font-size:.68rem;font-weight:900}.impact-number{font-size:2rem;font-weight:900;margin-top:9px}.impact-copy{color:#aab7c9;font-size:.73rem;line-height:1.5;margin-top:3px}.milestone{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}.milestone:last-child{border-bottom:0}.milestone-icon{font-size:1.3rem}.milestone-name{font-size:.76rem;font-weight:900}.milestone-desc{color:var(--muted);font-size:.63rem;margin-top:2px}
+.support-button{display:flex;justify-content:center;align-items:center;gap:8px;width:100%;padding:13px;border-radius:14px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:#6ee7b7;text-decoration:none;font-size:.8rem;font-weight:900}
+.support-choice{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.support-choice button{padding:12px 8px;border-radius:13px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:white;font-size:.7rem;font-weight:900;cursor:pointer}
+.future-grid{display:grid;gap:9px}.future-item{display:flex;align-items:center;gap:12px;padding:13px;border-radius:16px;border:1px solid var(--border);background:rgba(255,255,255,.03)}.future-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.05);font-size:1.2rem}.future-title{font-size:.76rem;font-weight:900}.future-status{color:#64748b;font-size:.6rem;margin-top:2px}
+.modal{position:fixed;inset:0;z-index:500;display:none;place-items:end center;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);padding:12px}.modal.open{display:grid}.modal-box{width:100%;max-width:470px;max-height:90vh;overflow:auto;border-radius:25px;padding:20px;background:#111a2b;border:1px solid var(--border);box-shadow:0 -20px 70px rgba(0,0,0,.35)}.modal-title{font-size:1.1rem;font-weight:900;margin-bottom:15px}.form-group{margin-bottom:12px}.form-label{display:block;color:var(--muted);font-size:.67rem;font-weight:900;margin-bottom:5px}.input,.textarea,.select{width:100%;border:1px solid var(--border);background:#0b1321;color:white;border-radius:13px;padding:12px;outline:none;font-size:.82rem}.textarea{min-height:80px;resize:vertical}.primary-button{width:100%;border:0;padding:13px;border-radius:14px;background:linear-gradient(135deg,#3b82f6,#06b6d4);color:white;font-weight:900;cursor:pointer}.secondary-button{width:100%;border:1px solid var(--border);padding:11px;border-radius:14px;background:rgba(255,255,255,.04);color:white;font-weight:800;cursor:pointer;margin-top:7px}.close-button{background:none;border:0;color:var(--muted);width:100%;padding:10px;margin-top:4px;cursor:pointer}
+.bottom-nav{position:fixed;z-index:150;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:grid;grid-template-columns:repeat(5,1fr);padding:9px 4px 11px;background:rgba(7,11,20,.93);backdrop-filter:blur(18px);border-top:1px solid var(--border)}.nav-button{border:0;background:none;color:#64748b;cursor:pointer;font-size:.59rem;font-weight:800}.nav-button span{display:block;font-size:1.15rem;margin-bottom:3px}.nav-button.active{color:#60a5fa}
+.fab{position:fixed;z-index:140;right:max(18px,calc((100vw - 480px)/2 + 18px));bottom:78px;width:53px;height:53px;border:0;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:white;font-size:1.35rem;font-weight:900;box-shadow:0 10px 30px rgba(59,130,246,.35);cursor:pointer}
+.empty{padding:25px 12px;text-align:center;color:var(--muted);font-size:.75rem;line-height:1.5}.loader{text-align:center;padding:35px;color:var(--muted);font-size:.75rem}.dot{display:inline-block;width:7px;height:7px;margin:0 2px;border-radius:50%;background:#60a5fa;animation:bounce 1s infinite alternate}.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}@keyframes bounce{from{transform:translateY(0);opacity:.4}to{transform:translateY(-5px);opacity:1}}
+.toast{position:fixed;z-index:1000;left:50%;bottom:95px;transform:translateX(-50%) translateY(20px);width:max-content;max-width:90%;padding:11px 15px;border-radius:14px;background:#182235;border:1px solid var(--border);color:white;font-size:.72rem;font-weight:800;opacity:0;pointer-events:none;transition:.25s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(min-width:700px){body{border-left:1px solid var(--border);border-right:1px solid var(--border)}}
+</style>
 </head>
+
 <body>
-
-  <header>
+<header>
     <div class="logo">sp<span>Gub</span></div>
-    <div class="header-actions" style="display:flex; align-items:center; gap:7px;">
-      <button onclick="showComingSoon('💬 Chat is coming soon!')" title="Chat" style="padding:6px 9px;">💬</button>
-      <button id="authHeaderBtn" onclick="openAuthModal()">Sign Up / Login</button>
+    <div class="header-actions">
+        <button class="icon-button" onclick="showComingSoon('🔔 Notifications are coming soon.')">🔔</button>
+        <button class="icon-button" onclick="showComingSoon('💬 Global chat is coming soon.')">💬</button>
+        <button id="accountButton" class="account-button" onclick="openAuthModal()">Join</button>
     </div>
-  </header>
+</header>
 
-  <div class="user-status-bar" id="userStatusBar">
-    <span id="currentUserLabel">👤 Guest Mode (Tap to save account)</span>
-    <button onclick="openAuthModal()" style="background:none; border:none; color:var(--accent-cyan); font-weight:800; cursor:pointer;">Account</button>
-  </div>
+<div class="user-bar">
+    <span id="currentUserLabel">👋 Welcome to spGub</span>
+    <span class="user-location" id="languageDisplay">🌐 English</span>
+</div>
 
-  <div class="search-box">
-    <input type="text" id="userSearchInput" placeholder="🔍 Search username..." onkeyup="searchUsers(this.value)">
-    <div id="searchResults" style="margin-top:6px; font-size:0.8rem;"></div>
-  </div>
+<div class="search-area">
+    <input id="userSearchInput" class="search-input" type="text" placeholder="🔎 Find people by username..." oninput="searchUsers(this.value)">
+    <div id="searchResults" class="search-results"></div>
+</div>
 
-  <button class="fab-create" onclick="openCreateModal()">
-    <span>⚡</span> Post Dilemma
-  </button>
+<main id="view-home" class="view active">
+    <section class="hero">
+        <div class="hero-globe"></div>
+        <div class="hero-kicker">🌍 THE WORLD IS TALKING</div>
+        <h1>See what people around the world think.</h1>
+        <p>Ask. Vote. Compare. Discover something you didn't expect.</p>
+        <button class="hero-button" onclick="scrollToPulse()">Explore the world →</button>
+    </section>
 
-  <main id="view-feed" class="view-section active">
-    <div id="postsFeed"></div>
-  </main>
+    <div id="worldPulse" class="pulse-card">
+        <div class="pulse-top">
+            <span class="pulse-label">🌍 WORLD PULSE</span>
+            <span class="live-pill">● LIVE</span>
+        </div>
+        <div id="pulseQuestion" class="pulse-question">If you suddenly received $1 million, what would you do first?</div>
+        <div class="pulse-options">
+            <button class="pulse-option" onclick="answerPulse(1)">💰 Invest it</button>
+            <button class="pulse-option" onclick="answerPulse(2)">✈️ Travel</button>
+        </div>
+        <div id="pulseResult" class="pulse-result">
+            <div style="font-size:.68rem;color:#94a3b8;">WORLDWIDE RESULT</div>
+            <div style="margin-top:7px;font-size:.72rem;font-weight:800;">Invest <span style="float:right;">64%</span></div>
+            <div class="result-bar"><div class="result-fill" style="width:64%;"></div></div>
+            <div style="margin-top:8px;font-size:.72rem;font-weight:800;">Travel <span style="float:right;">36%</span></div>
+            <div class="result-bar"><div class="result-fill" style="width:36%;"></div></div>
+            <div style="margin-top:12px;color:#67e8f9;font-size:.69rem;font-weight:800;">👀 Imagine seeing this result by country.</div>
+        </div>
+    </div>
 
-  <section id="view-referrals" class="view-section">
-    <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 14px;">🏆 Invite & Earn Hub</h2>
+    <div class="section-heading"><h2>Discover something</h2><span>Explore</span></div>
+    <div class="discovery-grid">
+        <div class="discovery-card" onclick="showComingSoon('🧪 Global experiments are coming soon. You will be able to participate in experiments and see what the world discovers.')"><div class="discovery-icon">🧪</div><h3>Experiments</h3><p>Test ideas with people worldwide.</p><div class="discovery-glow"></div></div>
+        <div class="discovery-card" onclick="showComingSoon('🔎 Discoveries are coming soon. Follow unusual findings and see how they develop.')"><div class="discovery-icon">🔎</div><h3>Discoveries</h3><p>Find something unexpected.</p><div class="discovery-glow"></div></div>
+        <div class="discovery-card" onclick="showComingSoon('🧠 Questions will become a deeper global question system.')"><div class="discovery-icon">🧠</div><h3>Questions</h3><p>What would you answer?</p><div class="discovery-glow"></div></div>
+        <div class="discovery-card" onclick="showComingSoon('📚 Human Knowledge is coming soon.')"><div class="discovery-icon">📚</div><h3>Knowledge</h3><p>Learn from the world.</p><div class="discovery-glow"></div></div>
+    </div>
+
+    <div class="section-heading"><h2>🔥 People are curious about</h2><span>Today</span></div>
+    <div id="trendingList">
+        <div class="trending-card" onclick="showComingSoon('🌎 Country comparison is coming soon.')"><div class="trending-number">#01 · GLOBAL</div><div class="trending-title">Would you rather live in a city or somewhere quiet?</div></div>
+        <div class="trending-card" onclick="showComingSoon('🌎 Country comparison is coming soon.')"><div class="trending-number">#02 · CULTURE</div><div class="trending-title">What is one thing every country should learn from another?</div></div>
+        <div class="trending-card" onclick="showComingSoon('🌎 Country comparison is coming soon.')"><div class="trending-number">#03 · THOUGHT</div><div class="trending-title">If nobody could judge you, what would you change about your life?</div></div>
+    </div>
+
+    <div class="section-heading"><h2>🌐 Global feed</h2><span>Live</span></div>
+    <div id="postsFeed"><div class="loader"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>
+</main>
+
+<section id="view-explore" class="view">
+    <div class="section-heading"><h2>🔭 Explore</h2><span>Go deeper</span></div>
+    <div class="hero" style="min-height:170px;">
+        <div class="hero-kicker">ONE WORLD · MANY ANSWERS</div>
+        <h1 style="font-size:1.45rem;">Your answer is only one part of the story.</h1>
+        <p>Soon you will be able to compare answers across countries, cultures and communities.</p>
+    </div>
+    <div class="future-grid">
+        <div class="future-item" onclick="showComingSoon('🌍 Country comparison is coming soon.')"><div class="future-icon">🌎</div><div><div class="future-title">Country Comparisons</div><div class="future-status">COMING SOON</div></div></div>
+        <div class="future-item" onclick="showComingSoon('🧪 Global experiments are coming soon.')"><div class="future-icon">🧪</div><div><div class="future-title">World Experiments</div><div class="future-status">COMING SOON</div></div></div>
+        <div class="future-item" onclick="showComingSoon('🔎 Discoveries are coming soon.')"><div class="future-icon">🔎</div><div><div class="future-title">Discoveries</div><div class="future-status">COMING SOON</div></div></div>
+        <div class="future-item" onclick="showComingSoon('📚 Human Knowledge is coming soon.')"><div class="future-icon">📚</div><div><div class="future-title">Human Knowledge</div><div class="future-status">COMING SOON</div></div></div>
+        <div class="future-item" onclick="showComingSoon('🔮 Predictions are coming soon.')"><div class="future-icon">🔮</div><div><div class="future-title">Predictions</div><div class="future-status">COMING SOON</div></div></div>
+        <div class="future-item" onclick="showComingSoon('🌐 Communities and networking are coming soon.')"><div class="future-icon">🤝</div><div><div class="future-title">Communities & Networking</div><div class="future-status">COMING SOON</div></div></div>
+    </div>
+</section>
+
+<section id="view-impact" class="view">
+    <div class="section-heading"><h2>🌍 Community Impact</h2><span>Your contribution</span></div>
+    <div class="impact-card">
+        <div class="badge" id="impactBadge">🌱 Community Starter</div>
+        <div id="impactNumber" class="impact-number">0</div>
+        <div class="impact-copy">verified people you've helped bring into the global conversation.</div>
+        <div style="margin-top:13px;" class="impact-copy">Your impact is not just about numbers. Genuine participation matters.</div>
+    </div>
     <div class="card">
-      <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">YOUR UNIQUE REFERRAL LINK</div>
-      <p style="margin-top:8px; font-weight:800; font-size:0.95rem; color:var(--accent-cyan); word-break:break-all;" id="inviteCodeDisplay">spgub.com/?ref=guest</p>
-      <button class="modal-btn" onclick="copyReferralLink()">📋 Copy Invite Link</button>
-
-      <div class="stats-grid">
-        <div class="stat-box">
-          <div class="stat-lbl">TOTAL INVITES</div>
-          <div class="stat-val" id="refCount">0</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-lbl">IMPACT POINTS</div>
-          <div class="stat-val" id="refPoints">0</div>
-        </div>
-      </div>
+        <div style="font-size:.72rem;color:#94a3b8;font-weight:900;">YOUR INVITATION</div>
+        <div id="inviteLink" style="margin-top:8px;padding:11px;border-radius:12px;background:#0b1321;color:#67e8f9;font-size:.7rem;word-break:break-all;font-weight:800;">Sign in to get your link.</div>
+        <button class="primary-button" style="margin-top:9px;" onclick="copyReferralLink()">📋 Copy invitation link</button>
+        <button class="secondary-button" onclick="shareReferral()">📲 Share with someone</button>
     </div>
-  </section>
+    <div class="card">
+        <div class="section-heading" style="margin-top:0;"><h2>🏆 Milestones</h2></div>
+        <div class="milestone"><div class="milestone-icon">🌱</div><div><div class="milestone-name">Community Starter</div><div class="milestone-desc">5 verified participants</div></div></div>
+        <div class="milestone"><div class="milestone-icon">🤝</div><div><div class="milestone-name">Community Contributor</div><div class="milestone-desc">30 verified participants</div></div></div>
+        <div class="milestone"><div class="milestone-icon">🌍</div><div><div class="milestone-name">Global Connector</div><div class="milestone-desc">Connect people from 5 countries</div></div></div>
+        <div class="milestone"><div class="milestone-icon">🗺️</div><div><div class="milestone-name">World Connector</div><div class="milestone-desc">Connect people from 10 countries</div></div></div>
+        <div class="milestone"><div class="milestone-icon">🚀</div><div><div class="milestone-name">Community Builder</div><div class="milestone-desc">100 verified participants</div></div></div>
+    </div>
+</section>
 
-  <section id="view-dashboard" class="view-section">
-    <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 14px;">👤 My Profile</h2>
+<section id="view-profile" class="view">
+    <div class="section-heading"><h2>👤 My Profile</h2><span>Your world</span></div>
     <div class="card profile-card">
-      <div class="profile-avatar-wrap">
-        <div class="profile-avatar" id="profileAvatar">G</div>
-        <button class="avatar-coming" onclick="showComingSoon('👤 Profile pictures are coming soon!')" title="Profile picture">📷</button>
-      </div>
-      <div class="profile-name" id="profileName">Guest</div>
-      <div class="profile-email" id="profileEmail">Sign in to see your account details</div>
-      <div class="profile-meta" id="profileMeta">Create an account to track your posts, votes, followers and following.</div>
-      <div class="profile-actions">
-        <button class="small-action" onclick="showComingSoon('💬 Chat is coming soon!')">💬 Chat</button>
-        <button class="small-action" onclick="showComingSoon('👤 Profile pictures are coming soon!')">📷 Profile Photo</button>
-      </div>
+        <div id="profileAvatar" class="profile-avatar">G</div>
+        <div id="profileName" class="profile-name">Guest</div>
+        <div id="profileEmail" class="profile-email">Sign in to create your profile.</div>
+        <div id="profileCountry" class="profile-country">🌍 Global participant</div>
+        <div class="profile-actions">
+            <button class="small-action" onclick="showComingSoon('📷 Profile pictures are coming soon.')">📷 Profile Photo</button>
+            <button class="small-action" onclick="showComingSoon('💬 Direct chat is coming soon.')">💬 Chat</button>
+        </div>
     </div>
     <div class="card">
-      <div class="section-title" style="margin-top:0;">📈 Your Numbers</div>
-      <div class="stats-grid">
-        <div class="stat-box"><div class="stat-lbl">POSTS</div><div class="stat-val" id="myPostCount">0</div></div>
-        <div class="stat-box"><div class="stat-lbl">TOTAL VOTES</div><div class="stat-val" id="myTotalVotes">0</div></div>
-        <div class="stat-box"><div class="stat-lbl">FOLLOWERS</div><div class="stat-val" id="followerCount">0</div></div>
-        <div class="stat-box"><div class="stat-lbl">FOLLOWING</div><div class="stat-val" id="followingCount">0</div></div>
-      </div>
+        <div class="section-heading" style="margin-top:0;"><h2>📊 Your numbers</h2></div>
+        <div class="stats-grid">
+            <div class="stat-box"><div class="stat-label">POSTS</div><div id="myPostCount" class="stat-value">0</div></div>
+            <div class="stat-box"><div class="stat-label">VOTES</div><div id="myTotalVotes" class="stat-value">0</div></div>
+            <div class="stat-box"><div class="stat-label">FOLLOWERS</div><div id="followerCount" class="stat-value">0</div></div>
+            <div class="stat-box"><div class="stat-label">FOLLOWING</div><div id="followingCount" class="stat-value">0</div></div>
+        </div>
     </div>
     <div class="card">
-      <div class="section-title" style="margin-top:0;">📝 My Posts & Performance</div>
-      <div id="myPostsPerformance"><div class="empty-state">Log in to see how your posts are performing.</div></div>
+        <div class="section-heading" style="margin-top:0;"><h2>📝 My posts</h2></div>
+        <div id="myPostsPerformance"><div class="empty">Log in to see your content performance.</div></div>
     </div>
-  </section>
+</section>
 
-  <section id="view-support" class="view-section">
-    <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 14px;">💬 Help & Support</h2>
+<section id="view-support" class="view">
+    <div class="section-heading"><h2>💬 Support</h2><span>We're listening</span></div>
+    <div class="hero" style="min-height:190px;">
+        <div class="hero-kicker">SPGUB SUPPORT</div>
+        <h1 style="font-size:1.5rem;">Help us keep SpGub alive ❤️</h1>
+        <p>Need help, found a problem, have an idea — or simply want to support the server and future development?</p>
+    </div>
+
     <div class="card">
-      <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.5;">Have questions, feedback, or need help? Contact us directly via email. We read every message!</p>
-      <a href="mailto:bmy466499@gmail.com?subject=spGub%20Support%20Request" class="support-btn">
-        <span>📧</span> Email Us Direct (Gmail)
-      </a>
+        <a class="support-button" href="mailto:bmy466499@gmail.com?subject=spGub%20Support%20Request">📧 Contact spGub Support</a>
+        <div class="support-choice">
+            <button onclick="showSupportUs()">❤️ Support Us</button>
+            <button onclick="showComingSoon('💡 Your feedback helps shape SpGub.')">💡 Give Feedback</button>
+        </div>
     </div>
-  </section>
 
-  <nav>
-    <button class="nav-item active" onclick="switchTab('feed', this)">
-      <span style="font-size:1.3rem;">🌍</span> Hub
-    </button>
-    <button class="nav-item" onclick="switchTab('referrals', this)">
-      <span style="font-size:1.3rem;">🏆</span> Invites
-    </button>
-    <button class="nav-item" onclick="switchTab('dashboard', this)">
-      <span style="font-size:1.3rem;">👤</span> Profile
-    </button>
-    <button class="nav-item" onclick="switchTab('support', this)">
-      <span style="font-size:1.3rem;">💬</span> Support
-    </button>
-  </nav>
-
-  <div class="modal-overlay" id="authModal">
-    <div class="modal-content">
-      <h3 style="margin-bottom: 12px; font-size: 1.15rem; font-weight: 800;" id="authTitle">Create Account 🚀</h3>
-
-      <div class="form-group" id="groupUsername">
-        <label>Username</label>
-        <input type="text" id="authUsername" placeholder="e.g. mikpedighe" />
-      </div>
-      <div class="form-group">
-        <label>Email Address</label>
-        <input type="email" id="authEmail" placeholder="yourname@gmail.com" />
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="authPassword" placeholder="••••••••" />
-      </div>
-
-      <div class="form-group" id="groupLanguage">
-        <label>Preferred Language</label>
-        <select id="authLanguage">
-          <option value="en">English 🇬🇧</option>
-          <option value="es">Español 🇪🇸</option>
-          <option value="fr">Français 🇫🇷</option>
-          <option value="pt">Português 🇧🇷</option>
-          <option value="de">Deutsch 🇩🇪</option>
-        </select>
-      </div>
-
-      <button class="modal-btn" id="authSubmitBtn" onclick="handleAuthSubmit()">Sign Up Now</button>
-      <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 12px; cursor: pointer;" onclick="toggleAuthMode()" id="authToggleText">
-        Already have an account? <b>Log In</b>
-      </p>
-      <button class="modal-cancel-btn" onclick="closeAuthModal()">Close</button>
+    <div class="card">
+        <div class="section-heading" style="margin-top:0;"><h2>❤️ Support SpGub</h2></div>
+        <p style="color:#94a3b8;font-size:.75rem;line-height:1.6;">
+            If SpGub becomes something you enjoy using, you may eventually be able to support the project financially. Your support would help with hosting, servers, development and keeping the service running.
+        </p>
+        <button class="secondary-button" onclick="showSupportUs()">View support options</button>
     </div>
-  </div>
+</section>
 
-  <div class="modal-overlay" id="createModal">
-    <div class="modal-content">
-      <h3 style="margin-bottom: 14px; font-size: 1.15rem; font-weight: 800;">Post New Dilemma 🚀</h3>
-      <div class="form-group">
-        <label>Question / Dilemma</label>
-        <textarea id="postQuestion" style="height:70px;" placeholder="Should remote workers get equal pay?"></textarea>
-      </div>
-      <div class="form-group">
-        <label>Option 1</label>
-        <input type="text" id="postOpt1" placeholder="Yes, equal pay" />
-      </div>
-      <div class="form-group">
-        <label>Option 2</label>
-        <input type="text" id="postOpt2" placeholder="No, location matters" />
-      </div>
-      <button class="small-action" style="width:100%; margin-top:2px;" onclick="showComingSoon('📷 Image upload is coming soon!')">📷 Add Image <span style="color:var(--text-muted);">(Coming soon)</span></button>
-      <button class="modal-btn" onclick="submitNewPost()">Publish Dilemma</button>
-      <button class="modal-cancel-btn" onclick="closeCreateModal()">Cancel</button>
+<button class="fab" onclick="openCreateModal()">+</button>
+
+<nav class="bottom-nav">
+    <button class="nav-button active" onclick="switchTab('home',this)"><span>🌍</span>Hub</button>
+    <button class="nav-button" onclick="switchTab('explore',this)"><span>🔭</span>Explore</button>
+    <button class="nav-button" onclick="switchTab('impact',this)"><span>🌱</span>Impact</button>
+    <button class="nav-button" onclick="switchTab('profile',this)"><span>👤</span>Profile</button>
+    <button class="nav-button" onclick="switchTab('support',this)"><span>💬</span>Support</button>
+</nav>
+
+<div id="authModal" class="modal">
+    <div class="modal-box">
+        <div id="authTitle" class="modal-title">Create your account 🚀</div>
+        <div id="usernameGroup" class="form-group"><label class="form-label">USERNAME</label><input id="authUsername" class="input" type="text" maxlength="25" placeholder="e.g. mikpedighe"></div>
+        <div class="form-group"><label class="form-label">EMAIL</label><input id="authEmail" class="input" type="email" placeholder="yourname@gmail.com"></div>
+        <div class="form-group"><label class="form-label">PASSWORD</label><input id="authPassword" class="input" type="password" placeholder="At least 6 characters"></div>
+        <div id="languageGroup" class="form-group"><label class="form-label">LANGUAGE</label><select id="authLanguage" class="select"><option value="en">English 🇬🇧</option><option value="es">Español 🇪🇸</option><option value="fr">Français 🇫🇷</option><option value="pt">Português 🇧🇷</option><option value="de">Deutsch 🇩🇪</option><option value="ur">اردو 🇵🇰</option><option value="zh">中文 🇨🇳</option></select></div>
+        <div id="countryGroup" class="form-group"><label class="form-label">COUNTRY</label><select id="authCountry" class="select"><option value="Nigeria">🇳🇬 Nigeria</option><option value="Ghana">🇬🇭 Ghana</option><option value="Kenya">🇰🇪 Kenya</option><option value="South Africa">🇿🇦 South Africa</option><option value="United Kingdom">🇬🇧 United Kingdom</option><option value="United States">🇺🇸 United States</option><option value="India">🇮🇳 India</option><option value="Pakistan">🇵🇰 Pakistan</option><option value="China">🇨🇳 China</option><option value="Brazil">🇧🇷 Brazil</option><option value="France">🇫🇷 France</option><option value="Germany">🇩🇪 Germany</option><option value="Other">🌍 Other</option></select></div>
+        <button id="authSubmit" class="primary-button" onclick="handleAuthSubmit()">Create Account</button>
+        <button id="authToggle" class="secondary-button" onclick="toggleAuthMode()">Already have an account? Log in</button>
+        <button class="close-button" onclick="closeModal('authModal')">Close</button>
     </div>
-  </div>
+</div>
 
-  <div class="modal-overlay" id="comingSoonModal">
-    <div class="modal-content">
-      <div style="font-size:2rem; margin-bottom:8px;">🚧</div>
-      <h3 style="font-size:1.15rem; font-weight:800; margin-bottom:8px;">Coming soon</h3>
-      <p id="comingSoonText" style="color:var(--text-muted); font-size:0.85rem; line-height:1.5;">This feature is being prepared.</p>
-      <button class="modal-btn" onclick="closeComingSoon()">Okay</button>
+<div id="createModal" class="modal">
+    <div class="modal-box">
+        <div class="modal-title">Start a global conversation ⚡</div>
+        <div class="form-group"><label class="form-label">QUESTION / DILEMMA</label><textarea id="postQuestion" class="textarea" maxlength="300" placeholder="Ask something people would genuinely want to answer..."></textarea></div>
+        <div class="form-group"><label class="form-label">OPTION 1</label><input id="postOpt1" class="input" maxlength="100" placeholder="Option 1"></div>
+        <div class="form-group"><label class="form-label">OPTION 2</label><input id="postOpt2" class="input" maxlength="100" placeholder="Option 2"></div>
+        <button class="secondary-button" onclick="showComingSoon('📷 Image posts are coming soon.')">📷 Add Image <span style="color:#64748b;">· Coming soon</span></button>
+        <button class="primary-button" style="margin-top:8px;" onclick="submitNewPost()">Publish</button>
+        <button class="close-button" onclick="closeModal('createModal')">Cancel</button>
     </div>
-  </div>
+</div>
 
-  <script>
-    let isSignUpMode = true;
-    let currentUserData = null;
+<div id="comingModal" class="modal">
+    <div class="modal-box" style="text-align:center;">
+        <div style="font-size:2.5rem;margin-bottom:8px;">🚧</div>
+        <div class="modal-title">Coming soon</div>
+        <p id="comingText" style="color:#94a3b8;font-size:.78rem;line-height:1.5;"></p>
+        <button class="primary-button" style="margin-top:15px;" onclick="closeModal('comingModal')">Got it</button>
+    </div>
+</div>
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const referredByCode = urlParams.get('ref');
+<div id="supportModal" class="modal">
+    <div class="modal-box">
+        <div style="text-align:center;font-size:2.2rem;">❤️</div>
+        <div class="modal-title" style="text-align:center;">Support SpGub</div>
+        <p style="color:#94a3b8;font-size:.78rem;line-height:1.6;text-align:center;">
+            We want SpGub to remain useful, fast and available as it grows. Financial support can eventually help cover servers, hosting and development.
+        </p>
+        <div class="card" style="margin-top:15px;text-align:center;background:rgba(255,255,255,.03);">
+            <div style="font-size:.72rem;color:#67e8f9;font-weight:900;">SUPPORT PAYMENTS</div>
+            <div style="font-size:.78rem;font-weight:800;margin-top:8px;">Coming soon ❤️</div>
+            <div style="font-size:.66rem;color:#94a3b8;margin-top:5px;">We will add a trusted payment option when one is ready.</div>
+        </div>
+        <a class="support-button" style="margin-top:10px;" href="mailto:bmy466499@gmail.com?subject=I%20want%20to%20support%20SpGub">💌 Contact us about supporting</a>
+        <button class="close-button" onclick="closeModal('supportModal')">Close</button>
+    </div>
+</div>
 
-    function switchTab(tabName, el) {
-      document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-      document.getElementById('view-' + tabName).classList.add('active');
-      el.classList.add('active');
-      if (tabName === 'dashboard') renderProfileDetails();
-    }
+<div id="toast" class="toast"></div>
 
-    function openAuthModal() { document.getElementById('authModal').classList.add('open'); }
-    function closeAuthModal() { document.getElementById('authModal').classList.remove('open'); }
-    function openCreateModal() { document.getElementById('createModal').classList.add('open'); }
-    function closeCreateModal() { document.getElementById('createModal').classList.remove('open'); }
+<script>
+let currentUserData=null;
+let isSignupMode=true;
+let feedUnsubscribe=null;
+let pendingReferral=new URLSearchParams(window.location.search).get("ref");
 
-    function toggleAuthMode() {
-      isSignUpMode = !isSignUpMode;
-      document.getElementById('authTitle').innerText = isSignUpMode ? "Create Account 🚀" : "Welcome Back 🔑";
-      document.getElementById('groupUsername').style.display = isSignUpMode ? "block" : "none";
-      document.getElementById('groupLanguage').style.display = isSignUpMode ? "block" : "none";
-      document.getElementById('authSubmitBtn').innerText = isSignUpMode ? "Sign Up Now" : "Log In";
-      document.getElementById('authToggleText').innerHTML = isSignUpMode ? "Already have an account? <b>Log In</b>" : "Need an account? <b>Sign Up</b>";
-    }
+const languageNames={en:"English",es:"Español",fr:"Français",pt:"Português",de:"Deutsch",ur:"Urdu",zh:"中文"};
 
-    async function handleAuthSubmit() {
-      const email = document.getElementById('authEmail').value.trim();
-      const password = document.getElementById('authPassword').value.trim();
-      const rawUsername = document.getElementById('authUsername').value.trim().replace(/[^a-zA-Z0-9_]/g, '') || 'user';
-      const userLang = document.getElementById('authLanguage').value || 'en';
-
-      if (!email || !password) return alert("Please enter email and password.");
-      if (password.length < 6) return alert("Password must be at least 6 characters long.");
-
-      try {
-        if (isSignUpMode) {
-          const res = await window.createUserWithEmailAndPassword(window.auth, email, password);
-          const user = res.user;
-          const myRefCode = rawUsername.toLowerCase() + "_" + Math.floor(1000 + Math.random() * 9000);
-
-          await window.setDoc(window.doc(window.db, "users", user.uid), {
-            uid: user.uid,
-            username: "@" + rawUsername,
-            email: email,
-            language: userLang,
-            createdAt: new Date(),
-            referralCode: myRefCode,
-            referredBy: referredByCode || null,
-            totalReferrals: 0,
-            impactPoints: 10,
-            followersCount: 0,
-            followingCount: 0
-          });
-
-          if (referredByCode) {
-            try {
-              const q = window.query(window.collection(window.db, "users"), window.where("referralCode", "==", referredByCode));
-              const querySnap = await window.getDocs(q);
-              querySnap.forEach(async (docSnap) => {
-                await window.updateDoc(window.doc(window.db, "users", docSnap.id), {
-                  totalReferrals: window.increment(1),
-                  impactPoints: window.increment(10)
-                });
-              });
-            } catch (refErr) {
-              console.log("Referral processing skipped:", refErr);
-            }
-          }
-
-          alert("🎉 Account created successfully!");
-        } else {
-          await window.signInWithEmailAndPassword(window.auth, email, password);
-          alert("👋 Logged in!");
+function detectDeviceLanguage(){
+    const raw=navigator.languages?.[0]||navigator.language||"en";
+    const code=raw.toLowerCase().split("-")[0];
+    return languageNames[code]?code:"en";
+}
+function setupLanguage(){
+    const lang=detectDeviceLanguage();
+    const select=document.getElementById("authLanguage");
+    if(select)select.value=lang;
+    document.getElementById("languageDisplay").innerText="🌐 "+(languageNames[lang]||"English");
+}
+function switchTab(name,button){
+    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+    document.getElementById("view-"+name).classList.add("active");
+    document.querySelectorAll(".nav-button").forEach(b=>b.classList.remove("active"));
+    if(button)button.classList.add("active");
+    window.scrollTo({top:0,behavior:"smooth"});
+    if(name==="profile")renderProfile();
+    if(name==="impact")renderImpact();
+}
+function scrollToPulse(){document.getElementById("worldPulse").scrollIntoView({behavior:"smooth",block:"center"});}
+function openAuthModal(){document.getElementById("authModal").classList.add("open");}
+function openCreateModal(){if(!currentUserData){showToast("Create an account before posting.");openAuthModal();return}document.getElementById("createModal").classList.add("open");}
+function closeModal(id){document.getElementById(id).classList.remove("open");}
+function showComingSoon(message){document.getElementById("comingText").innerText=message;document.getElementById("comingModal").classList.add("open");}
+function showSupportUs(){document.getElementById("supportModal").classList.add("open");}
+let toastTimer;
+function showToast(message){const toast=document.getElementById("toast");toast.innerText=message;toast.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove("show"),2800);}
+function toggleAuthMode(){
+    isSignupMode=!isSignupMode;
+    document.getElementById("authTitle").innerText=isSignupMode?"Create your account 🚀":"Welcome back 👋";
+    document.getElementById("usernameGroup").style.display=isSignupMode?"block":"none";
+    document.getElementById("languageGroup").style.display=isSignupMode?"block":"none";
+    document.getElementById("countryGroup").style.display=isSignupMode?"block":"none";
+    document.getElementById("authSubmit").innerText=isSignupMode?"Create Account":"Log In";
+    document.getElementById("authToggle").innerText=isSignupMode?"Already have an account? Log in":"Need an account? Create one";
+}
+async function handleAuthSubmit(){
+    const email=document.getElementById("authEmail").value.trim();
+    const password=document.getElementById("authPassword").value.trim();
+    if(!email||!password){showToast("Please enter your email and password.");return}
+    if(password.length<6){showToast("Password must be at least 6 characters.");return}
+    try{
+        if(isSignupMode){
+            const username=document.getElementById("authUsername").value.trim().replace(/[^a-zA-Z0-9_]/g,"").toLowerCase();
+            if(username.length<3){showToast("Username must contain at least 3 characters.");return}
+            const language=document.getElementById("authLanguage").value;
+            const country=document.getElementById("authCountry").value;
+            const usernameQuery=window.query(window.collection(window.db,"users"),window.where("username","==","@"+username),window.limit(1));
+            const usernameSnap=await window.getDocs(usernameQuery);
+            if(!usernameSnap.empty){showToast("That username is already taken.");return}
+            const result=await window.createUserWithEmailAndPassword(window.auth,email,password);
+            const user=result.user;
+            const referralCode=username+"_"+Math.floor(1000+Math.random()*9000);
+            await window.setDoc(window.doc(window.db,"users",user.uid),{
+                uid:user.uid,username:"@"+username,email,language,country,
+                createdAt:window.serverTimestamp(),referralCode,
+                referredBy:pendingReferral||null,totalReferrals:0,verifiedReferrals:0,
+                impactPoints:10,countriesReached:[],followersCount:0,followingCount:0,
+                participationCount:0,referralStatus:"Community Starter"
+            });
+            showToast("🎉 Welcome to SpGub!");
+            closeModal("authModal");
+        }else{
+            await window.signInWithEmailAndPassword(window.auth,email,password);
+            showToast("👋 Welcome back!");
+            closeModal("authModal");
         }
-        closeAuthModal();
-      } catch (err) {
-        alert("Authentication Error: " + err.message);
-      }
+    }catch(error){
+        console.error(error);
+        let message=error.message||"Authentication failed.";
+        message=message.replace("Firebase: Error (auth/","").replace(").","");
+        showToast(message);
     }
-
-    async function castVote(postId, optionNum) {
-      if (!currentUserData) {
-        alert("Please sign up or log in to vote!");
-        return openAuthModal();
-      }
-
-      const postRef = window.doc(window.db, "posts", postId);
-      const updateData = optionNum === 1
-        ? { votesOpt1: window.increment(1), totalVotes: window.increment(1) }
-        : { votesOpt2: window.increment(1), totalVotes: window.increment(1) };
-
-      try {
-        await window.updateDoc(postRef, updateData);
-      } catch (e) {
-        console.log("Error voting:", e);
-      }
+}
+window.onAuthStateChanged(window.auth,async user=>{
+    if(user){
+        try{
+            const snap=await window.getDoc(window.doc(window.db,"users",user.uid));
+            currentUserData=snap.exists()?snap.data():{uid:user.uid,email:user.email};
+            document.getElementById("currentUserLabel").innerText="🟢 "+(currentUserData.username||user.email);
+            document.getElementById("accountButton").innerText="Log out";
+            document.getElementById("accountButton").onclick=logout;
+            renderProfile();renderImpact();
+        }catch(error){console.error(error)}
+    }else{
+        currentUserData=null;
+        document.getElementById("currentUserLabel").innerText="👋 Welcome to spGub";
+        document.getElementById("accountButton").innerText="Join";
+        document.getElementById("accountButton").onclick=openAuthModal;
+        renderProfile();renderImpact();
     }
-
-    async function toggleFollow(targetUid, btnEl) {
-      if (!currentUserData) return openAuthModal();
-
-      if (!targetUid || targetUid === currentUserData.uid) return;
-
-      const followRef = window.doc(window.db, "users", targetUid, "followers", currentUserData.uid);
-      const followSnap = await window.getDoc(followRef);
-
-      if (followSnap.exists()) {
-        await window.deleteDoc(followRef);
-        await window.updateDoc(window.doc(window.db, "users", targetUid), { followersCount: window.increment(-1) });
-        await window.updateDoc(window.doc(window.db, "users", currentUserData.uid), { followingCount: window.increment(-1) });
-        btnEl.innerText = "Follow +";
-        btnEl.classList.remove("following");
-      } else {
-        await window.setDoc(followRef, { followerUid: currentUserData.uid, timestamp: new Date() });
-        await window.updateDoc(window.doc(window.db, "users", targetUid), { followersCount: window.increment(1) });
-        await window.updateDoc(window.doc(window.db, "users", currentUserData.uid), { followingCount: window.increment(1) });
-        btnEl.innerText = "Following ✓";
-        btnEl.classList.add("following");
-      }
-    }
-
-    function sharePost(postId, questionText) {
-      const shareUrl = window.location.origin + window.location.pathname + "?post=" + postId;
-      if (navigator.share) {
-        navigator.share({
-          title: 'spGub Dilemma',
-          text: questionText,
-          url: shareUrl
+});
+async function logout(){try{await window.signOut(window.auth);showToast("You have been logged out.");}catch(error){showToast("Could not log out.");}}
+let pulseAnswered=false;
+function answerPulse(option){
+    if(pulseAnswered){showToast("You've already answered this pulse.");return}
+    pulseAnswered=true;
+    document.getElementById("pulseResult").classList.add("show");
+    if(currentUserData)recordParticipation("world_pulse");
+    else showToast("🌍 You joined the global pulse. Create an account to keep your participation.");
+}
+async function recordParticipation(action){
+    if(!currentUserData)return;
+    try{
+        const userRef=window.doc(window.db,"users",currentUserData.uid);
+        await window.updateDoc(userRef,{participationCount:window.increment(1)});
+        if(currentUserData.referredBy&&!currentUserData.referralVerified)await verifyReferral();
+    }catch(error){console.log("Participation update:",error)}
+}
+async function verifyReferral(){
+    if(!currentUserData||!currentUserData.referredBy||currentUserData.referralVerified)return;
+    try{
+        const q=window.query(window.collection(window.db,"users"),window.where("referralCode","==",currentUserData.referredBy),window.limit(1));
+        const snap=await window.getDocs(q);
+        if(snap.empty)return;
+        const referrerDoc=snap.docs[0];
+        if(referrerDoc.id===currentUserData.uid)return;
+        const referrerRef=window.doc(window.db,"users",referrerDoc.id);
+        const invitedUserRef=window.doc(window.db,"users",currentUserData.uid);
+        await window.runTransaction(window.db,async transaction=>{
+            const invitedSnap=await transaction.get(invitedUserRef);
+            const referrerSnap=await transaction.get(referrerRef);
+            if(!invitedSnap.exists()||!referrerSnap.exists())return;
+            const invited=invitedSnap.data();
+            if(invited.referralVerified)return;
+            const referrer=referrerSnap.data();
+            const currentCountries=Array.isArray(referrer.countriesReached)?referrer.countriesReached:[];
+            const invitedCountry=invited.country||"Unknown";
+            const updatedCountries=currentCountries.includes(invitedCountry)?currentCountries:[...currentCountries,invitedCountry];
+            transaction.update(invitedUserRef,{referralVerified:true,referralVerifiedAt:window.serverTimestamp()});
+            transaction.update(referrerRef,{verifiedReferrals:window.increment(1),totalReferrals:window.increment(1),impactPoints:window.increment(10),countriesReached:updatedCountries});
         });
-      } else {
-        navigator.clipboard.writeText(shareUrl);
-        alert("📋 Link copied to clipboard!");
-      }
-    }
-
-    function showComingSoon(message) {
-      document.getElementById('comingSoonText').innerText = message || "This feature is being prepared.";
-      document.getElementById('comingSoonModal').classList.add('open');
-    }
-
-    function closeComingSoon() {
-      document.getElementById('comingSoonModal').classList.remove('open');
-    }
-
-    function getInitial(username) {
-      const clean = String(username || '').replace('@', '').trim();
-      return (clean.charAt(0) || 'G').toUpperCase();
-    }
-
-    function renderProfileDetails() {
-      const nameEl = document.getElementById('profileName');
-      const emailEl = document.getElementById('profileEmail');
-      const metaEl = document.getElementById('profileMeta');
-      const avatarEl = document.getElementById('profileAvatar');
-
-      if (!currentUserData) {
-        nameEl.innerText = 'Guest';
-        emailEl.innerText = 'Sign in to see your account details';
-        metaEl.innerText = 'Create an account to track your posts, votes, followers and following.';
-        avatarEl.innerText = 'G';
-        document.getElementById('followerCount').innerText = '0';
-        document.getElementById('followingCount').innerText = '0';
-        document.getElementById('myPostCount').innerText = '0';
-        document.getElementById('myTotalVotes').innerText = '0';
-        document.getElementById('myPostsPerformance').innerHTML =
-          '<div class="empty-state">Log in to see how your posts are performing.</div>';
-        return;
-      }
-
-      nameEl.innerText = currentUserData.username || '@user';
-      emailEl.innerText = currentUserData.email || '';
-      const languageNames = { en:'English', es:'Español', fr:'Français', pt:'Português', de:'Deutsch' };
-      metaEl.innerText = 'Language: ' + (languageNames[currentUserData.language] || 'English');
-      avatarEl.innerText = getInitial(currentUserData.username);
-
-      document.getElementById('followerCount').innerText = currentUserData.followersCount || 0;
-      document.getElementById('followingCount').innerText = currentUserData.followingCount || 0;
-      loadMyPostsPerformance();
-    }
-
-    async function loadMyPostsPerformance() {
-      const container = document.getElementById('myPostsPerformance');
-      if (!currentUserData || !window.db) {
-        container.innerHTML = '<div class="empty-state">Log in to see your posts.</div>';
-        return;
-      }
-
-      try {
-        const q = window.query(
-          window.collection(window.db, "posts"),
-          window.where("authorUid", "==", currentUserData.uid)
-        );
-
-        const snap = await window.getDocs(q);
-        const posts = [];
-        let totalVotes = 0;
-
-        snap.forEach(docSnap => {
-          const p = docSnap.data();
-          const votes1 = Number(p.votesOpt1 || 0);
-          const votes2 = Number(p.votesOpt2 || 0);
-          const total = votes1 + votes2;
-          totalVotes += total;
-          posts.push({ id: docSnap.id, ...p, votes1, votes2, total });
-        });
-
-        posts.sort((a, b) => {
-          const aTime = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
-          const bTime = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
-          return bTime - aTime;
-        });
-
-        document.getElementById('myPostCount').innerText = posts.length;
-        document.getElementById('myTotalVotes').innerText = totalVotes;
-
-        if (!posts.length) {
-          container.innerHTML = '<div class="empty-state">You have not posted anything yet.<br>Create your first dilemma and start the conversation.</div>';
-          return;
+        const refreshed=await window.getDoc(invitedUserRef);
+        if(refreshed.exists())currentUserData=refreshed.data();
+        showToast("🌍 Your participation is now counted.");
+    }catch(error){console.log("Referral verification:",error)}
+}
+async function castVote(postId,optionNumber){
+    if(!currentUserData){showToast("Create an account to vote.");openAuthModal();return}
+    try{
+        const postRef=window.doc(window.db,"posts",postId);
+        await window.updateDoc(postRef,optionNumber===1?{votesOpt1:window.increment(1),totalVotes:window.increment(1)}:{votesOpt2:window.increment(1),totalVotes:window.increment(1)});
+        await recordParticipation("vote");
+        showToast("🗳️ Your voice has been added.");
+    }catch(error){console.error("Vote error:",error);showToast("Vote could not be recorded.")}
+}
+async function toggleFollow(targetUid,button){
+    if(!currentUserData){openAuthModal();return}
+    if(!targetUid||targetUid===currentUserData.uid)return;
+    try{
+        const followRef=window.doc(window.db,"users",targetUid,"followers",currentUserData.uid);
+        const existing=await window.getDoc(followRef);
+        if(existing.exists()){
+            await window.deleteDoc(followRef);
+            await window.updateDoc(window.doc(window.db,"users",targetUid),{followersCount:window.increment(-1)});
+            await window.updateDoc(window.doc(window.db,"users",currentUserData.uid),{followingCount:window.increment(-1)});
+            button.innerText="Follow +";button.classList.remove("following");
+        }else{
+            await window.setDoc(followRef,{followerUid:currentUserData.uid,timestamp:window.serverTimestamp()});
+            await window.updateDoc(window.doc(window.db,"users",targetUid),{followersCount:window.increment(1)});
+            await window.updateDoc(window.doc(window.db,"users",currentUserData.uid),{followingCount:window.increment(1)});
+            button.innerText="Following ✓";button.classList.add("following");
         }
-
-        container.innerHTML = posts.slice(0, 20).map(post => {
-          const pct1 = post.total ? Math.round((post.votes1 / post.total) * 100) : 0;
-          const pct2 = post.total ? Math.round((post.votes2 / post.total) * 100) : 0;
-          const question = String(post.question || 'Untitled post')
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-
-          return `
-            <div class="post-performance">
-              <div class="performance-question">${question}</div>
-              <div class="performance-row">
-                <span>📊 ${post.total} total vote${post.total === 1 ? '' : 's'}</span>
-                <span>Post #${post.id.slice(0, 5)}</span>
-              </div>
-              <div class="performance-bars">
-                <div class="mini-bar-row">
-                  <div>
-                    <div style="margin-bottom:3px;">🔵 ${String(post.option1 || 'Option 1')}</div>
-                    <div class="mini-bar"><span style="width:${pct1}%"></span></div>
-                  </div>
-                  <strong>${pct1}%</strong>
-                </div>
-                <div class="mini-bar-row">
-                  <div>
-                    <div style="margin-bottom:3px;">🔴 ${String(post.option2 || 'Option 2')}</div>
-                    <div class="mini-bar"><span style="width:${pct2}%"></span></div>
-                  </div>
-                  <strong>${pct2}%</strong>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
-      } catch (e) {
-        console.log("Profile posts error:", e);
-        container.innerHTML = '<div class="empty-state">Your profile is ready, but your post performance could not be loaded yet. Check your Firebase rules.</div>';
-      }
-    }
-
-    async function searchUsers(searchTerm) {
-      const resultsDiv = document.getElementById('searchResults');
-      if (!searchTerm || searchTerm.length < 2) {
-        resultsDiv.innerHTML = '';
-        return;
-      }
-
-      const q = window.query(
-        window.collection(window.db, "users"),
-        window.where("username", ">=", "@" + searchTerm),
-        window.where("username", "<=", "@" + searchTerm + "\uf8ff"),
-        window.limit(5)
-      );
-
-      const snap = await window.getDocs(q);
-      resultsDiv.innerHTML = '';
-      snap.forEach(docSnap => {
-        const u = docSnap.data();
-        resultsDiv.innerHTML += `<div style="padding:6px; background:#161e31; margin-top:4px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
-          <span>${u.username}</span>
-          <button class="follow-btn" onclick="toggleFollow('${u.uid}', this)">Follow +</button>
-        </div>`;
-      });
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      const deviceLang = (navigator.language || 'en').split('-')[0];
-      const langSelect = document.getElementById('authLanguage');
-      if (langSelect && ['en', 'es', 'fr', 'pt', 'de'].includes(deviceLang)) {
-        langSelect.value = deviceLang;
-      }
-
-      renderProfileDetails();
-
-      setTimeout(() => {
-        if (window.auth) {
-          window.onAuthStateChanged(window.auth, async (user) => {
-            if (user) {
-              const snap = await window.getDoc(window.doc(window.db, "users", user.uid));
-              if (snap.exists()) {
-                currentUserData = snap.data();
-                document.getElementById('currentUserLabel').innerText = "🟢 " + currentUserData.username;
-                document.getElementById('authHeaderBtn').innerText = "Log Out";
-                document.getElementById('authHeaderBtn').onclick = () => window.signOut(window.auth);
-                document.getElementById('refCount').innerText = currentUserData.totalReferrals || 0;
-                document.getElementById('refPoints').innerText = currentUserData.impactPoints || 0;
-                document.getElementById('followerCount').innerText = currentUserData.followersCount || 0;
-                document.getElementById('followingCount').innerText = currentUserData.followingCount || 0;
-                document.getElementById('inviteCodeDisplay').innerText = window.location.origin + window.location.pathname + "?ref=" + (currentUserData.referralCode || '');
-                renderProfileDetails();
-              }
-            } else {
-              currentUserData = null;
-              renderProfileDetails();
-              document.getElementById('currentUserLabel').innerText = "👤 Guest Mode (Tap to save account)";
-              document.getElementById('authHeaderBtn').innerText = "Sign Up / Login";
-              document.getElementById('authHeaderBtn').onclick = openAuthModal;
-            }
-          });
-        }
-        loadFeed();
-      }, 1000);
+    }catch(error){console.error(error);showToast("Could not update follow.")}
+}
+function loadFeed(){
+    if(!window.db)return;
+    const q=window.query(window.collection(window.db,"posts"),window.orderBy("createdAt","desc"),window.limit(30));
+    if(feedUnsubscribe)feedUnsubscribe();
+    feedUnsubscribe=window.onSnapshot(q,snapshot=>{
+        const feed=document.getElementById("postsFeed");
+        if(snapshot.empty){feed.innerHTML='<div class="empty">🌱 No community posts yet.<br><br>Be one of the first people to start a global conversation.</div>';return}
+        feed.innerHTML="";
+        snapshot.forEach(docSnap=>renderPost(docSnap.id,docSnap.data(),feed));
+    },error=>{
+        console.error("Feed error:",error);
+        document.getElementById("postsFeed").innerHTML='<div class="empty">The global feed could not load right now.<br>Check your Firebase Firestore rules.</div>';
     });
-
-    function loadFeed() {
-      if (!window.db) return;
-      const q = window.query(window.collection(window.db, "posts"), window.orderBy("createdAt", "desc"), window.limit(20));
-
-      window.onSnapshot(q, (snapshot) => {
-        const feedEl = document.getElementById('postsFeed');
-        feedEl.innerHTML = '';
-        snapshot.forEach((docSnap) => {
-          const post = docSnap.data();
-          const postId = docSnap.id;
-          const total = (post.votesOpt1 || 0) + (post.votesOpt2 || 0);
-          const pct1 = total > 0 ? Math.round(((post.votesOpt1 || 0) / total) * 100) : 0;
-          const pct2 = total > 0 ? Math.round(((post.votesOpt2 || 0) / total) * 100) : 0;
-
-          const card = document.createElement('div');
-          card.className = 'card';
-          const safeQuestion = String(post.question || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-
-          card.innerHTML = `
-            <div class="card-header">
-              <div class="user-info">
-                <div class="avatar">${(post.author || '@u').charAt(1).toUpperCase()}</div>
-                <span class="username">${post.author || '@unknown'}</span>
-              </div>
-              <button class="follow-btn" onclick="toggleFollow('${post.authorUid || ''}', this)">Follow +</button>
-            </div>
-            <div class="question">${post.question || ''}</div>
-
-            <button class="option-btn" onclick="castVote('${postId}', 1)">
-              <div class="bar" style="width:${pct1}%"></div>
-              <div class="option-content"><span>🔵 ${post.option1 || ''}</span><span>${pct1}%</span></div>
-            </button>
-            <button class="option-btn" onclick="castVote('${postId}', 2)">
-              <div class="bar" style="width:${pct2}%"></div>
-              <div class="option-content"><span>🔴 ${post.option2 || ''}</span><span>${pct2}%</span></div>
-            </button>
-
-            <div class="card-footer">
-              <span>📊 ${total} Votes</span>
-              <button class="share-btn" onclick="sharePost('${postId}', '${safeQuestion}')">📲 Share</button>
-            </div>
-          `;
-          feedEl.appendChild(card);
+}
+function escapeHTML(value){return String(value??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
+function renderPost(postId,post,container){
+    const votes1=Number(post.votesOpt1||0),votes2=Number(post.votesOpt2||0),total=votes1+votes2;
+    const pct1=total?Math.round(votes1/total*100):0,pct2=total?Math.round(votes2/total*100):0;
+    const author=escapeHTML(post.author||"@unknown"),question=escapeHTML(post.question||"Untitled question");
+    const option1=escapeHTML(post.option1||"Option 1"),option2=escapeHTML(post.option2||"Option 2"),country=escapeHTML(post.country||"");
+    const initial=(post.author||"@u").replace("@","").charAt(0).toUpperCase()||"U";
+    const card=document.createElement("article");card.className="card";
+    card.innerHTML=`
+        <div class="card-header"><div class="user-info"><div class="avatar">${initial}</div><div><div class="username">${author}</div><div class="country-label">${country?"🌍 "+country:"Global participant"}</div></div></div>
+        ${post.authorUid&&post.authorUid!==currentUserData?.uid?`<button class="follow-btn" onclick="toggleFollow('${post.authorUid}',this)">Follow +</button>`:""}</div>
+        <div class="question">${question}</div>
+        <button class="option-btn" onclick="castVote('${postId}',1)"><div class="option-bar" style="width:${pct1}%;"></div><div class="option-content"><span>🔵 ${option1}</span><span>${pct1}%</span></div></button>
+        <button class="option-btn" onclick="castVote('${postId}',2)"><div class="option-bar" style="width:${pct2}%;"></div><div class="option-content"><span>🟣 ${option2}</span><span>${pct2}%</span></div></button>
+        <div class="card-footer"><span>📊 ${total} ${total===1?"vote":"votes"}</span><button class="share-btn" onclick='sharePost(${JSON.stringify(postId)},${JSON.stringify(post.question||"")})'>📲 Share</button></div>`;
+    container.appendChild(card);
+}
+async function submitNewPost(){
+    if(!currentUserData){openAuthModal();return}
+    const question=document.getElementById("postQuestion").value.trim(),option1=document.getElementById("postOpt1").value.trim(),option2=document.getElementById("postOpt2").value.trim();
+    if(question.length<5||!option1||!option2){showToast("Add a question and both options.");return}
+    try{
+        await window.addDoc(window.collection(window.db,"posts"),{author:currentUserData.username,authorUid:currentUserData.uid,country:currentUserData.country||"Unknown",language:currentUserData.language||"en",question,option1,option2,votesOpt1:0,votesOpt2:0,totalVotes:0,createdAt:window.serverTimestamp()});
+        await recordParticipation("post");
+        document.getElementById("postQuestion").value="";document.getElementById("postOpt1").value="";document.getElementById("postOpt2").value="";
+        closeModal("createModal");showToast("🚀 Your question is live.");
+    }catch(error){console.error(error);showToast("Could not publish your post.")}
+}
+let searchTimer;
+async function searchUsers(value){
+    clearTimeout(searchTimer);
+    const term=value.trim().replace(/^@/,"").toLowerCase(),results=document.getElementById("searchResults");
+    if(term.length<2){results.innerHTML="";return}
+    searchTimer=setTimeout(async()=>{
+        try{
+            const q=window.query(window.collection(window.db,"users"),window.where("username",">=","@"+term),window.where("username","<=","@"+term+"\uf8ff"),window.limit(6));
+            const snap=await window.getDocs(q);
+            if(snap.empty){results.innerHTML='<div class="empty" style="padding:12px;background:#101827;border-radius:12px;">No matching users found.</div>';return}
+            results.innerHTML="";
+            snap.forEach(docSnap=>{
+                const user=docSnap.data();if(currentUserData&&user.uid===currentUserData.uid)return;
+                const row=document.createElement("div");row.style.cssText="display:flex;justify-content:space-between;align-items:center;padding:10px;margin-top:5px;border-radius:12px;background:#101827;border:1px solid rgba(255,255,255,.07)";
+                row.innerHTML=`<div><div style="font-size:.75rem;font-weight:900;">${escapeHTML(user.username||"@user")}</div><div style="font-size:.6rem;color:#94a3b8;">${escapeHTML(user.country||"Global")}</div></div><button class="follow-btn" onclick="toggleFollow('${user.uid}',this)">Follow +</button>`;
+                results.appendChild(row);
+            });
+        }catch(error){console.error("Search:",error)}
+    },350);
+}
+async function renderProfile(){
+    const name=document.getElementById("profileName"),email=document.getElementById("profileEmail"),country=document.getElementById("profileCountry"),avatar=document.getElementById("profileAvatar");
+    if(!currentUserData){
+        name.innerText="Guest";email.innerText="Sign in to create your profile.";country.innerText="🌍 Global participant";avatar.innerText="G";
+        ["myPostCount","myTotalVotes","followerCount","followingCount"].forEach(id=>document.getElementById(id).innerText="0");
+        document.getElementById("myPostsPerformance").innerHTML='<div class="empty">Log in to see your posts and performance.</div>';return;
+    }
+    name.innerText=currentUserData.username||"@user";email.innerText=currentUserData.email||"";country.innerText="🌍 "+(currentUserData.country||"Global participant");avatar.innerText=getInitial(currentUserData.username);
+    document.getElementById("followerCount").innerText=currentUserData.followersCount||0;document.getElementById("followingCount").innerText=currentUserData.followingCount||0;
+    await loadMyPosts();
+}
+async function loadMyPosts(){
+    const container=document.getElementById("myPostsPerformance");if(!currentUserData)return;
+    try{
+        const q=window.query(window.collection(window.db,"posts"),window.where("authorUid","==",currentUserData.uid)),snap=await window.getDocs(q),posts=[];let totalVotes=0;
+        snap.forEach(docSnap=>{const p=docSnap.data(),v1=Number(p.votesOpt1||0),v2=Number(p.votesOpt2||0),total=v1+v2;totalVotes+=total;posts.push({id:docSnap.id,...p,v1,v2,total})});
+        posts.sort((a,b)=>(b.createdAt?.toMillis?a.createdAt.toMillis():0)-(a.createdAt?.toMillis?a.createdAt.toMillis():0));
+        document.getElementById("myPostCount").innerText=posts.length;document.getElementById("myTotalVotes").innerText=totalVotes;
+        if(!posts.length){container.innerHTML='<div class="empty">You haven\'t posted anything yet.<br><br>Ask the world your first question.</div>';return}
+        container.innerHTML="";
+        posts.slice(0,20).forEach(post=>{
+            const p1=post.total?Math.round(post.v1/post.total*100):0,p2=post.total?Math.round(post.v2/post.total*100):0,item=document.createElement("div");
+            item.style.cssText="padding:13px;border-radius:15px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);margin-bottom:8px";
+            item.innerHTML=`<div style="font-size:.78rem;font-weight:900;line-height:1.4;">${escapeHTML(post.question)}</div><div style="margin-top:8px;color:#94a3b8;font-size:.65rem;">📊 ${post.total} votes</div><div style="margin-top:8px;font-size:.65rem;">🔵 ${escapeHTML(post.option1)} <strong style="float:right;">${p1}%</strong></div><div class="result-bar"><div class="result-fill" style="width:${p1}%;"></div></div><div style="margin-top:8px;font-size:.65rem;">🟣 ${escapeHTML(post.option2)} <strong style="float:right;">${p2}%</strong></div><div class="result-bar"><div class="result-fill" style="width:${p2}%;"></div></div>`;
+            container.appendChild(item);
         });
-      });
-    }
+    }catch(error){console.error("Profile:",error);container.innerHTML='<div class="empty">Your profile is ready, but post performance could not be loaded.</div>'}
+}
+function renderImpact(){
+    const number=document.getElementById("impactNumber"),badge=document.getElementById("impactBadge"),invite=document.getElementById("inviteLink");
+    if(!currentUserData){number.innerText="0";badge.innerText="🌱 Community Starter";invite.innerText="Sign in to get your personal invitation link.";return}
+    const verified=Number(currentUserData.verifiedReferrals||0),countries=Array.isArray(currentUserData.countriesReached)?currentUserData.countriesReached.length:0;
+    number.innerText=verified;let status="🌱 Community Starter";
+    if(verified>=100)status="🚀 Community Builder";else if(verified>=30)status="🤝 Community Contributor";else if(countries>=10)status="🗺️ World Connector";else if(countries>=5)status="🌍 Global Connector";
+    badge.innerText=status;invite.innerText=buildReferralLink();
+}
+function buildReferralLink(){return currentUserData?window.location.origin+window.location.pathname+"?ref="+encodeURIComponent(currentUserData.referralCode||""):""}
+async function copyReferralLink(){
+    if(!currentUserData){showToast("Create an account first.");openAuthModal();return}
+    try{await navigator.clipboard.writeText(buildReferralLink());showToast("📋 Invitation link copied!")}catch(error){showToast("Copy failed. Hold the link to copy it.")}
+}
+async function shareReferral(){
+    if(!currentUserData){openAuthModal();return}
+    const link=buildReferralLink();
+    if(navigator.share){try{await navigator.share({title:"Join me on spGub",text:"Come see what people around the world are thinking on spGub 🌍",url:link})}catch(error){}}else copyReferralLink();
+}
+async function sharePost(postId,question){
+    const url=window.location.origin+window.location.pathname+"?post="+encodeURIComponent(postId);
+    if(navigator.share){try{await navigator.share({title:"spGub",text:question,url})}catch(error){}}else{try{await navigator.clipboard.writeText(url);showToast("📋 Post link copied!")}catch(error){showToast(url)}}
+}
+function getInitial(username){return String(username||"G").replace("@","").trim().charAt(0).toUpperCase()||"G"}
 
-    async function submitNewPost() {
-      const question = document.getElementById('postQuestion').value.trim();
-      const opt1 = document.getElementById('postOpt1').value.trim();
-      const opt2 = document.getElementById('postOpt2').value.trim();
-      const author = currentUserData ? currentUserData.username : '@guest';
+window.addEventListener("DOMContentLoaded",()=>{setupLanguage();loadFeed();renderProfile();renderImpact()});
 
-      if (!question || !opt1 || !opt2) return alert("Please fill all fields!");
-
-      try {
-        if (window.db) {
-          await window.addDoc(window.collection(window.db, "posts"), {
-            author: author,
-            authorUid: currentUserData ? currentUserData.uid : '',
-            question: question,
-            option1: opt1,
-            option2: opt2,
-            votesOpt1: 0,
-            votesOpt2: 0,
-            totalVotes: 0,
-            createdAt: window.serverTimestamp()
-          });
-        }
-        closeCreateModal();
-        document.getElementById('postQuestion').value = '';
-        document.getElementById('postOpt1').value = '';
-        document.getElementById('postOpt2').value = '';
-      } catch (e) {
-        alert(e.message);
-      }
-    }
-
-    function copyReferralLink() {
-      const linkText = document.getElementById('inviteCodeDisplay').innerText;
-      navigator.clipboard.writeText(linkText);
-      alert("📋 Referral link copied!");
-    }
-  </script>
+if(pendingReferral){
+    try{localStorage.setItem("spgub_pending_referral",pendingReferral)}catch(error){}
+}else{
+    try{pendingReferral=localStorage.getItem("spgub_pending_referral")}catch(error){pendingReferral=null}
+}
+</script>
 </body>
 </html>
