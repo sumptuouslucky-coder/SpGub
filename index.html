@@ -189,7 +189,7 @@ onAuthStateChanged(auth,async user=>{
  window.spgubCurrentUser=user||null;if(typeof syncGameState==='function')syncGameState();
  const name=user?.displayName||'SpGub Explorer';
  $('profileName').textContent=name;$('profileEmail').textContent=user?'@spgub_user':'Guest mode · browse freely';$('authMainButton').style.display=user?'none':'block';$('signOutButton').style.display=user?'block':'none';$('editProfileButton').style.display=user?'block':'none';
- if(user){try{const profile=await ensureProfile(user);if(profile){$('profileName').textContent=profile.displayName||name;$('profileEmail').textContent='@'+(profile.username||'spgub_user');}await loadUserActivity(user);if(profile)updateReferralUI(0,profile.inviteCode)}catch(e){console.error('SpGub setup failed:',e);const detail=[e?.code,e?.message].filter(Boolean).join(' — ');toast('SpGub setup failed'+(detail?': '+detail:'')+'. Check Firebase rules/data.')}}
+ if(user){try{const profile=await ensureProfile(user);if(profile){$('profileName').textContent=profile.displayName||name;$('profileEmail').textContent='@'+(profile.username||'spgub_user');}await loadUserActivity(user);if(profile)updateReferralUI(0,profile.inviteCode)}catch(e){console.error('SpGub setup failed:',e);toast('Signed in, but Firestore setup failed. Check your published rules.')}}
  else{userActionUnsubs.forEach(u=>u());userActionUnsubs=[];if(referralUnsubscribe)referralUnsubscribe();referralUnsubscribe=null;following.clear();liked.clear();updateReferralUI(0,'')}
 });
 </script>
