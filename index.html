@@ -147,6 +147,7 @@ const config = { apiKey:"AIzaSyDlxzDQvFUgZ1R31GAAZs1vaOV1LuLFNhs", authDomain:"s
 const app = getApps().length ? getApps()[0] : initializeApp(config);
 const auth = getAuth(app), db = getFirestore(app);
 const randomCode=()=>Array.from(crypto.getRandomValues(new Uint8Array(5)),b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
+function makeUsername(name){let v=String(name||'').toLowerCase().replace(/[^a-z0-9_]/g,'').slice(0,20);if(v.length<3)v='spgub_user';return v;}
 async function processReferral(user, profile){
  const pending=(new URL(location.href)).searchParams.get('ref') || localStorage.getItem('spgubPendingReferral') || '';
  if(!pending || !/^[A-Fa-f0-9]{10}$/.test(pending) || pending.toUpperCase()===profile?.inviteCode)return;
@@ -158,12 +159,12 @@ async function processReferral(user, profile){
 }
 async function ensureProfile(user){
  const profileRef=doc(db,'users',user.uid);let snap=await getDoc(profileRef),profile;
- if(snap.exists()){profile=snap.data();if(!profile.username){const username=(profile.displayName||user.displayName||'spgub_user').toLowerCase().replace(/[^a-z0-9_]/g,'').slice(0,20)||'spgub_user';await setDoc(profileRef,{username},{merge:true});profile={...profile,username};}}
+ if(snap.exists()){profile=snap.data();if(!profile.username){const username=makeUsername(profile.displayName||user.displayName);await setDoc(profileRef,{username},{merge:true});profile={...profile,username};}}
  else{
-  for(let attempt=0;attempt<5;attempt++){const code=randomCode();try{await runTransaction(db,async tx=>{const p=await tx.get(profileRef);if(p.exists()){profile=p.data();return}const codeRef=doc(db,'inviteCodes',code),c=await tx.get(codeRef);if(c.exists())throw new Error('CODE_COLLISION');profile={uid:user.uid,displayName:user.displayName||'SpGub Explorer',username:(user.displayName||'spgub_user').toLowerCase().replace(/[^a-z0-9_]/g,'').slice(0,20)||'spgub_user',inviteCode:code};tx.set(profileRef,{uid:user.uid,displayName:profile.displayName,username:profile.username,inviteCode:code,createdAt:serverTimestamp()});tx.set(codeRef,{ownerUid:user.uid,createdAt:serverTimestamp()})});break}catch(e){if(e.message==='CODE_COLLISION')continue;throw e}}
+  for(let attempt=0;attempt<5;attempt++){const code=randomCode();try{await runTransaction(db,async tx=>{const p=await tx.get(profileRef);if(p.exists()){profile=p.data();return}const codeRef=doc(db,'inviteCodes',code),c=await tx.get(codeRef);if(c.exists())throw new Error('CODE_COLLISION');profile={uid:user.uid,displayName:user.displayName||'SpGub Explorer',username:makeUsername(user.displayName),inviteCode:code};tx.set(profileRef,{uid:user.uid,displayName:profile.displayName,username:profile.username,inviteCode:code,createdAt:serverTimestamp()});tx.set(codeRef,{ownerUid:user.uid,createdAt:serverTimestamp()})});break}catch(e){if(e.message==='CODE_COLLISION')continue;throw e}}
   snap=await getDoc(profileRef);if(snap.exists())profile=snap.data();
  }
- if(profile) await processReferral(user,profile);
+ if(profile){try{await processReferral(user,profile)}catch(refErr){console.warn('Referral linking skipped; profile sign-in remains available:',refErr.code||refErr.message,refErr);}}
  return profile;
 }
 function startFeed(){
@@ -189,7 +190,7 @@ onAuthStateChanged(auth,async user=>{
  window.spgubCurrentUser=user||null;if(typeof syncGameState==='function')syncGameState();
  const name=user?.displayName||'SpGub Explorer';
  $('profileName').textContent=name;$('profileEmail').textContent=user?'@spgub_user':'Guest mode · browse freely';$('authMainButton').style.display=user?'none':'block';$('signOutButton').style.display=user?'block':'none';$('editProfileButton').style.display=user?'block':'none';
- if(user){try{const profile=await ensureProfile(user);if(profile){$('profileName').textContent=profile.displayName||name;$('profileEmail').textContent='@'+(profile.username||'spgub_user');}await loadUserActivity(user);if(profile)updateReferralUI(0,profile.inviteCode)}catch(e){console.error('SpGub setup failed:',e);toast('Signed in, but Firestore setup failed. Check your published rules.')}}
+ if(user){try{const profile=await ensureProfile(user);if(profile){$('profileName').textContent=profile.displayName||name;$('profileEmail').textContent='@'+(profile.username||'spgub_user');}await loadUserActivity(user);if(profile)updateReferralUI(0,profile.inviteCode)}catch(e){console.error('SpGub setup failed:',e.code||'',e.message||e);toast('Profile setup failed: '+(e.code==='permission-denied'?'Firestore rules denied a database action.':(e.message||'check connection')))}}
  else{userActionUnsubs.forEach(u=>u());userActionUnsubs=[];if(referralUnsubscribe)referralUnsubscribe();referralUnsubscribe=null;following.clear();liked.clear();updateReferralUI(0,'')}
 });
 </script>
