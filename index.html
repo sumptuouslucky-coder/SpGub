@@ -195,7 +195,7 @@ function editProfile(){if(!state.profile)return;$('editName').value=state.profil
 async function saveProfile(){const displayName=$('editName').value.trim();if(displayName.length<2||displayName.length>40){toast('Display name must be 2–40 characters.');return}try{const d=window.spgub;await d.setDoc(d.doc(d.db,'users',state.user.uid),{displayName},{merge:true});await d.setDoc(d.doc(d.db,'publicProfiles',state.user.uid),{displayName,displayNameLower:displayName.toLowerCase()},{merge:true});state.profile={...state.profile,displayName};$('profileName').textContent=displayName;closeModal('editModal');toast('Profile updated.')}catch(e){toast('Profile could not be updated.')}}
 async function submitIdeaPlaceholder(){}
 function updateAuthUI(){const yes=!!state.user;$('authButton').style.display=yes?'none':'inline-block';$('editProfileButton').style.display=yes?'inline-block':'none';$('signOutButton').style.display=yes?'inline-block':'none';$('profileName').textContent=state.profile?.displayName||'SpGub Explorer';$('profileHandle').textContent=yes?'@'+(state.profile?.username||'explorer'):'Guest mode · explore freely';$('profileAvatar').textContent=(state.profile?.displayName||'S').slice(0,1).toUpperCase();$('chatSignedOut').style.display=yes?'none':'block';$('chatInbox').style.display=yes?'block':'none'}
-async function authAction(mode){const username=$('authUsername').value.trim().toLowerCase(),password=$('authPassword').value;if(!/^[a-z0-9_]{3,20}$/.test(username)||password.length<6){$('authError').textContent='Use a 3–20 character username and password of at least 6 characters.';return}if(!window.spgubAuth){$('authError').textContent='Account service is still loading.';return}const email=username+'@username.spgub.invalid';try{let cred;if(mode==='signup'){cred=await window.spgubAuth.createUserWithEmailAndPassword(window.spgubAuth.auth,email,password);await window.spgubAuth.updateProfile(cred.user,{displayName:username})}else cred=await window.spgubAuth.signInWithEmailAndPassword(window.spgubAuth.auth,email,password);closeModal('authModal');toast(mode==='signup'?'Welcome to SpGub.':'Welcome back.')}catch(e){$('authError').textContent=({'auth/email-already-in-use':'That username is already registered.','auth/invalid-credential':'Username or password is incorrect.','auth/weak-password':'Choose a stronger password.','auth/operation-not-allowed':'Enable Email/Password in SpGub Authentication.'})[e.code]||'Account action failed: '+e.message}}
+async function authAction(mode){const username=$('authUsername').value.trim().toLowerCase(),password=$('authPassword').value;if(!/^[a-z0-9_]{3,20}$/.test(username)||password.length<6){$('authError').textContent='Use a 3–20 character username and password of at least 6 characters.';return}let waitCount=0;while(!window.spgubAuth&&!window.spgubAuthError&&waitCount<40){$('authError').textContent='Connecting securely…';await new Promise(r=>setTimeout(r,250));waitCount++}if(!window.spgubAuth){const why=window.spgubAuthError; $('authError').textContent=why?'Could not connect to SpGub accounts: '+why+' Please check your internet connection and reload the app.':'Account service did not respond. Close this screen, check your connection and reopen SpGub.';return}const email=username+'@username.spgub.invalid';try{let cred;if(mode==='signup'){cred=await window.spgubAuth.createUserWithEmailAndPassword(window.spgubAuth.auth,email,password);await window.spgubAuth.updateProfile(cred.user,{displayName:username})}else cred=await window.spgubAuth.signInWithEmailAndPassword(window.spgubAuth.auth,email,password);closeModal('authModal');toast(mode==='signup'?'Welcome to SpGub.':'Welcome back.')}catch(e){$('authError').textContent=({'auth/email-already-in-use':'That username is already registered.','auth/invalid-credential':'Username or password is incorrect.','auth/weak-password':'Choose a stronger password.','auth/operation-not-allowed':'Email/Password sign-in is not enabled in Firebase Authentication.','auth/network-request-failed':'Network connection failed. Check your data connection and try again.','auth/too-many-requests':'Too many attempts. Wait a little and try again.'})[e.code]||'Account action failed: '+(e.message||'Unknown error')}}
 async function signOutUser(){try{await window.spgubAuth.signOut(window.spgubAuth.auth);toast('Signed out.')}catch(e){toast('Could not sign out.')}}
 
 function openSearch(){$('searchQuery').value='';$('searchResults').innerHTML='<div class="empty">Search by display name, username or a topic.</div>';$('searchModal').classList.add('open')}
@@ -213,17 +213,98 @@ async function renderMyGroups(){if(!state.user||!window.spgub){$('myGroups').inn
 function init(){initTheme();updateSparkUI();initDaily();renderDrafts();$('language').value=localStorage.getItem('spgub_language')||'en';initFeed();updateAuthUI()}
 </script>
 <script type="module">
-import {initializeApp,getApps} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut,updateProfile} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc,addDoc,collection,query,where,getDocs,serverTimestamp,updateDoc,deleteDoc,writeBatch,onSnapshot,orderBy,limit,runTransaction,startAfter} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+(async()=>{
+try{
+const [appSDK,authSDK,dbSDK]=await Promise.all([
+ import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"),
+ import("https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"),
+ import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js")
+]);
+const {initializeApp,getApps}=appSDK;
+const {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut,updateProfile}=authSDK;
+const {getFirestore,doc,getDoc,setDoc,addDoc,collection,query,where,getDocs,serverTimestamp,updateDoc,deleteDoc,writeBatch,onSnapshot,orderBy,limit,runTransaction,startAfter}=dbSDK;
 const config={apiKey:"AIzaSyDlxzDQvFUgZ1R31GAAZs1vaOV1LuLFNhs",authDomain:"split-8bfe2.firebaseapp.com",projectId:"split-8bfe2",storageBucket:"split-8bfe2.firebasestorage.app",messagingSenderId:"840439219244",appId:"1:840439219244:web:b05119f1a3d9d96d9cbd89",measurementId:"G-DRDQ9LV5X6"};
 const app=getApps().length?getApps()[0]:initializeApp(config),auth=getAuth(app),db=getFirestore(app);
 window.spgubAuth={auth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile};
 window.spgub={db,doc,getDoc,setDoc,addDoc,collection,query,where,getDocs,serverTimestamp,updateDoc,deleteDoc,writeBatch,onSnapshot,orderBy,limit,runTransaction,startAfter};
 initFeed();
 function usernameFrom(name){let s=String(name||'explorer').toLowerCase().replace(/[^a-z0-9_]/g,'').slice(0,20);return s.length>=3?s:'spgub_explorer'}
-onAuthStateChanged(auth,async user=>{state.user=user||null;state.profile=null;if(user){try{const ref=doc(db,'users',user.uid),snap=await getDoc(ref);if(snap.exists())state.profile=snap.data();else{const displayName=user.displayName||'SpGub Explorer',username=usernameFrom(user.displayName);const inviteCode=Array.from(crypto.getRandomValues(new Uint8Array(5)),b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();const batch=writeBatch(db);batch.set(ref,{uid:user.uid,displayName,username,inviteCode,createdAt:serverTimestamp()});batch.set(doc(db,'publicProfiles',user.uid),{uid:user.uid,displayName,displayNameLower:displayName.toLowerCase(),username,createdAt:serverTimestamp()});batch.set(doc(db,'inviteCodes',inviteCode),{ownerUid:user.uid,createdAt:serverTimestamp()});await batch.commit();state.profile={uid:user.uid,displayName,username,inviteCode}}if(!state.profile.username){state.profile.username=usernameFrom(state.profile.displayName);await setDoc(ref,{username:state.profile.username},{merge:true})}if(!state.profile.inviteCode){const code=Array.from(crypto.getRandomValues(new Uint8Array(5)),b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();await setDoc(ref,{inviteCode:code},{merge:true});await setDoc(doc(db,'inviteCodes',code),{ownerUid:user.uid,createdAt:serverTimestamp()});state.profile.inviteCode=code}await setDoc(doc(db,'publicProfiles',user.uid),{uid:user.uid,displayName:state.profile.displayName,displayNameLower:(state.profile.displayName||'').toLowerCase(),username:state.profile.username},{merge:true});}catch(e){console.error('Profile bootstrap',e);toast('Signed in, but profile setup was blocked. Check the latest rules.')}try{const userRef=doc(db,'users',user.uid),us=await getDoc(userRef);state.sparks=Number(us.data()?.sparkBalance||0);const refCode=new URLSearchParams(location.search).get('ref');if(refCode){const codeSnap=await getDoc(doc(db,'inviteCodes',refCode));if(codeSnap.exists()&&codeSnap.data().ownerUid!==user.uid){const owner=codeSnap.data().ownerUid;const rr=doc(db,'referrals',user.uid);const existing=await getDoc(rr);if(!existing.exists())await setDoc(rr,{referrerUid:owner,referredUid:user.uid,inviteCode:refCode,createdAt:serverTimestamp()})}}}}catch(e){console.warn('Referral attribution',e)}}updateAuthUI();if(user){await Promise.all([followStats(),loadOwnReactions()]);loadInbox();renderProfile()}else{state.following.clear();state.liked.clear();state.voted.clear();$('conversationList').innerHTML='<div class="empty">Sign in to view conversations.</div>'}});
+onAuthStateChanged(auth,async user=>{
+  state.user=user||null;
+  state.profile=null;
+  if(user){
+    try{
+      const ref=doc(db,'users',user.uid);
+      const snap=await getDoc(ref);
+      if(snap.exists()){
+        state.profile=snap.data();
+      }else{
+        const displayName=user.displayName||'SpGub Explorer';
+        const username=usernameFrom(user.displayName);
+        const inviteCode=Array.from(crypto.getRandomValues(new Uint8Array(5)),b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
+        const batch=writeBatch(db);
+        batch.set(ref,{uid:user.uid,displayName,username,inviteCode,createdAt:serverTimestamp()});
+        batch.set(doc(db,'publicProfiles',user.uid),{uid:user.uid,displayName,displayNameLower:displayName.toLowerCase(),username,createdAt:serverTimestamp()});
+        batch.set(doc(db,'inviteCodes',inviteCode),{ownerUid:user.uid,createdAt:serverTimestamp()});
+        await batch.commit();
+        state.profile={uid:user.uid,displayName,username,inviteCode};
+      }
+      if(!state.profile.username){
+        state.profile.username=usernameFrom(state.profile.displayName);
+        await setDoc(ref,{username:state.profile.username},{merge:true});
+      }
+      if(!state.profile.inviteCode){
+        const code=Array.from(crypto.getRandomValues(new Uint8Array(5)),b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
+        await setDoc(ref,{inviteCode:code},{merge:true});
+        await setDoc(doc(db,'inviteCodes',code),{ownerUid:user.uid,createdAt:serverTimestamp()});
+        state.profile.inviteCode=code;
+      }
+      await setDoc(doc(db,'publicProfiles',user.uid),{
+        uid:user.uid,
+        displayName:state.profile.displayName,
+        displayNameLower:(state.profile.displayName||'').toLowerCase(),
+        username:state.profile.username
+      },{merge:true});
+    }catch(e){
+      console.error('Profile bootstrap',e);
+      toast('Signed in, but profile setup was blocked. Check the latest rules.');
+    }
+    try{
+      const userRef=doc(db,'users',user.uid);
+      const us=await getDoc(userRef);
+      state.sparks=Number(us.data()?.sparkBalance||0);
+      const refCode=new URLSearchParams(location.search).get('ref');
+      if(refCode){
+        const codeSnap=await getDoc(doc(db,'inviteCodes',refCode));
+        if(codeSnap.exists()&&codeSnap.data().ownerUid!==user.uid){
+          const owner=codeSnap.data().ownerUid;
+          const rr=doc(db,'referrals',user.uid);
+          const existing=await getDoc(rr);
+          if(!existing.exists())await setDoc(rr,{referrerUid:owner,referredUid:user.uid,inviteCode:refCode,createdAt:serverTimestamp()});
+        }
+      }
+    }catch(e){console.warn('Referral attribution',e);}
+  }
+  updateAuthUI();
+  if(user){
+    await Promise.all([followStats(),loadOwnReactions()]);
+    loadInbox();
+    renderProfile();
+  }else{
+    state.following.clear();
+    state.liked.clear();
+    state.voted.clear();
+    $('conversationList').innerHTML='<div class="empty">Sign in to view conversations.</div>';
+  }
+});
 init();
+}catch(error){
+ console.error('SpGub Firebase initialisation failed:',error);
+ window.spgubAuthError=(error&&error.message)?error.message:'Firebase module could not be loaded';
+ const box=document.getElementById('authError');
+ if(box)box.textContent='SpGub could not connect to its account service. Check your internet connection, then reload the app. Details: '+window.spgubAuthError;
+}
+})();
 </script>
 </body>
 </html>
