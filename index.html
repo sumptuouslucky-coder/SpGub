@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17152e">
 <meta name="description" content="SpGub — a global platform for questions, knowledge, opinions, experiences and different perspectives.">
-<meta name="application-name" content="SpGub — One World Build 13">
+<meta name="application-name" content="SpGub — One World Build 14">
 <title>SpGub — One World. Different Perspectives.</title>
 <link rel="manifest" href="manifest.webmanifest">
 <style>
@@ -123,6 +123,12 @@ main{padding:17px 16px 24px}.view.active{animation:spgubEnter .24s ease both}@ke
 .global-explorer-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.global-explorer-head b{display:block;font-size:.88rem;margin-top:4px}.globe-mark{font-size:1.7rem}.global-filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.global-filter-grid .field{margin:12px 0 4px}.global-filter-grid select{width:100%;padding:11px 9px;border:1px solid var(--line);border-radius:12px;background:var(--field);color:var(--text);font-size:.75rem}.global-filter-note{font-size:.65rem;color:var(--muted);margin:8px 0 5px;line-height:1.45}.global-active-filter{font-size:.68rem;font-weight:850;color:var(--a);padding-top:7px}
 @media(max-width:360px){.global-filter-grid{grid-template-columns:1fr}.global-filter-grid .field{margin:7px 0 2px}}
 
+
+/* Build 14: worldwide Daily Question on Home */
+.daily-main{padding:18px;border:1px solid color-mix(in srgb,var(--a) 38%,var(--line));border-radius:23px;background:linear-gradient(145deg,color-mix(in srgb,#7255d8 13%,var(--surface)),color-mix(in srgb,#2b9e96 10%,var(--surface)));box-shadow:var(--shadow);margin:4px 0 16px}
+.daily-main-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.daily-main h2{font-size:1.22rem;line-height:1.3;margin:12px 0 8px}.daily-main .daily-sub{font-size:.78rem;color:var(--muted)}
+.daily-answer-box{width:100%;min-height:112px;padding:12px;border:1px solid var(--line);border-radius:13px;background:var(--field);color:var(--text);font:inherit;font-size:.83rem;resize:vertical;margin-top:12px}
+.daily-answer-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:17px 0 8px}.daily-answer{padding:13px;border:1px solid var(--line);border-radius:15px;background:var(--surface);margin:9px 0;box-shadow:var(--shadow)}.daily-answer-meta{font-size:.67rem;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}.daily-answer-text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.83rem;margin:9px 0}.daily-answer-actions{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:7px}.daily-filter{display:flex;gap:7px;margin:8px 0}.daily-filter select{min-width:0;flex:1;padding:9px;border:1px solid var(--line);border-radius:11px;background:var(--field);color:var(--text);font-size:.72rem}.daily-admin{border:1px dashed var(--a);border-radius:14px;padding:12px;margin:12px 0;background:var(--surface2)}.daily-admin textarea{width:100%;min-height:78px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--text)}
 </style>
 </head>
 <body>
@@ -130,7 +136,18 @@ main{padding:17px 16px 24px}.view.active{animation:spgubEnter .24s ease both}@ke
 <main>
 <section id="home" class="view active">
  <div class="hero"><div class="eyebrow">ONE WORLD · DIFFERENT PERSPECTIVES</div><h1>Discover the world through other people.</h1><p class="tagline">Questions, knowledge, opinions and experiences — shared across borders.</p><p>Meet ideas beyond your usual circle. Share what you know. See how the world thinks.</p><div class="actions"><button class="btn" onclick="openView('discover')">Explore the world ✦</button><button class="btn alt" onclick="openComposer('thought')">Share a thought</button></div></div>
- <div class="card daily" id="dailyCard"><div class="daily-top"><div class="eyebrow">ONE WORLD · DAILY QUESTION</div><span class="daily-date" id="dailyDate">DAILY QUESTION</span></div><h2 id="dailyQuestion">A new question is waiting…</h2><p class="muted" id="dailyPrompt">Choose a direction. Then explore how other minds approach the same question.</p><div id="dailyChoices"></div><div id="dailyReveal"></div><div class="actions"><button class="btn alt" onclick="shareDaily()">Share the question</button><button class="btn soft" onclick="openDailyAnswer()">Answer the world</button></div></div>
+ <div class="daily-main" id="dailyCard">
+  <div class="daily-main-top"><div class="eyebrow">SPGUB DAILY · ONE WORLD, MANY PERSPECTIVES</div><span class="daily-date" id="dailyDate">LOADING TODAY</span></div>
+  <h2 id="dailyQuestion">Today's worldwide question is loading…</h2>
+  <p class="daily-sub" id="dailyPrompt">One shared question. Your perspective belongs in the conversation.</p>
+  <div id="dailyQuestionAdmin" class="daily-admin" style="display:none"><b>Official SpGub · Publish today's question</b><p class="muted">Only the designated official account should use this publisher.</p><textarea id="dailyAdminQuestion" maxlength="300" placeholder="Write today's question for the world..."></textarea><textarea id="dailyAdminPrompt" maxlength="240" placeholder="Optional invitation to participate"></textarea><button class="btn" style="margin-top:8px" onclick="publishDailyQuestion()">Publish worldwide question</button></div>
+  <div class="field"><label for="dailyAnswerText">YOUR PERSPECTIVE</label><textarea class="daily-answer-box" id="dailyAnswerText" maxlength="2000" placeholder="What would you like people around the world to understand?" oninput="updateDailyAnswerCount()"></textarea><div class="daily-main-top"><span class="muted" id="dailyAnswerCount">0 / 2000</span><button class="btn" id="dailySubmitButton" onclick="submitDailyAnswer()">Share your perspective</button></div></div>
+  <div class="actions"><button class="btn alt" onclick="shareDaily()">Share the question</button><button class="btn soft" onclick="refreshDailyAnswers()">Refresh answers</button></div>
+  <div id="dailyMyAnswerStatus" class="muted" style="margin-top:8px"></div>
+</div>
+<div class="daily-answer-head"><div><div class="eyebrow">THE WORLD RESPONDS</div><b>Explore people's answers</b></div><span class="muted" id="dailyAnswerTotal">0 perspectives</span></div>
+<div class="daily-filter"><select id="dailyCountryFilter" onchange="renderDailyAnswers()"><option value="all">All countries</option></select><select id="dailySortFilter" onchange="renderDailyAnswers()"><option value="newest">Newest</option><option value="helpful">Most helpful</option></select></div>
+<div id="dailyAnswers"><div class="empty">Connecting to the worldwide question…</div></div>
  
  <div class="card impact-principle"><div class="eyebrow">THE SPGUB DIFFERENCE</div><h2>Be known for what you contribute.</h2><p class="intro">A useful answer can matter more than a thousand views. A thoughtful idea can open a door. A small act of help can change someone’s direction.</p><div class="impact-pill-row"><span>✦ Useful contributions</span><span>↗ Fresh perspectives</span><span>◎ Real progress</span></div><p class="foot">SpGub is designed to help valuable contributions travel — not just popular accounts.</p></div>
  <div class="sectionhead"><h2>Step into SpGub</h2><small>Explore five connected worlds</small></div>
@@ -310,10 +327,82 @@ function composerTypeChanged(){$('pollFields').style.display=$('postKind').value
 
 
 function updateSparkUI(){if($('sparkPill'))$('sparkPill').textContent='✦ '+state.sparks+' Sparks';if($('sparkCount'))$('sparkCount').textContent=state.sparks;if($('pathCount'))$('pathCount').textContent=state.paths;if($('contributionCount'))$('contributionCount').textContent=state.contributions}
-function renderDaily(){const d=currentDailySpark();state.dailyData=d;$('dailyDate').textContent=new Date(d.day+'T12:00:00+01:00').toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'})+' · SPARK PATH '+String(d.index+1).padStart(2,'0');$('dailyQuestion').textContent=d.q;$('dailyPrompt').textContent=d.p;$('dailyChoices').innerHTML=d.c.map((choice,i)=>`<button class="choice" onclick="answerDaily(${i})"><span class="choice-index">0${i+1}</span><span>${esc(choice)}</span><span class="choice-arrow">↗</span></button>`).join('');if(state.dailyChoice!==null){const buttons=$('dailyChoices').querySelectorAll('button');buttons.forEach((b,i)=>{b.disabled=true;b.classList.toggle('selected',String(i)===state.dailyChoice)});$('dailyReveal').innerHTML='<div class="reveal"><b>Your direction today:</b> '+esc(d.c[Number(state.dailyChoice)]||'Your choice')+'. You can still explore other perspectives in Discover or add your own explanation.</div>'}}
-function answerDaily(i){const d=state.dailyData||currentDailySpark(),key='spgub_daily_'+d.day;if(state.dailyChoice!==null){toast('You have already chosen your direction today.');return}if(!Number.isInteger(i)||!d.c[i])return;state.dailyChoice=String(i);localStorage.setItem(key,String(i));state.paths++;localStorage.setItem('spgub_paths',state.paths);$('dailyChoices').querySelectorAll('button').forEach((b,n)=>{b.disabled=true;b.classList.toggle('selected',n===i)});$('dailyReveal').innerHTML='<div class="reveal"><b>Your direction today:</b> '+esc(d.c[i])+'. Share why this matters to you or explore other perspectives in Discover.</div>';updateSparkUI()}
-function openDailyAnswer(){const d=state.dailyData||currentDailySpark();openView('create');$('postKind').value='question';$('postTopic').value='Life experiences';$('postText').value='One World · Daily Question:\n'+d.q+'\n\nMy perspective: ';composerTypeChanged();$('postText').focus();toast('Add your perspective, then publish it for the community.')}
-function shareDaily(){const d=state.dailyData||currentDailySpark(),t="SpGub · One World Daily Question: "+d.q;if(navigator.share)navigator.share({title:'SpGub Daily Connection',text:t}).catch(()=>{});else if(navigator.clipboard?.writeText)navigator.clipboard.writeText(t).then(()=>toast('Question copied to clipboard.')).catch(()=>toast('Sharing is not available on this browser.'));else toast('Sharing is not available on this browser.')}
+const SPGUB_OFFICIAL_UID='x4NnsUoQrgOj40LD1C3c32IXcrq2';
+function dailyUtcKey(){return new Date().toISOString().slice(0,10)}
+function dailyDateLabel(day){const d=new Date(day+'T12:00:00Z');return d.toLocaleDateString(undefined,{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'})}
+function dailyDb(){return window.spgub}
+function dailyQuestionRef(day=dailyUtcKey()){const d=dailyDb();return d.doc(d.db,'dailyQuestions',day)}
+function renderDaily(){
+ const day=dailyUtcKey();state.dailyDay=day;$('dailyDate').textContent=dailyDateLabel(day)+' · UTC';
+ $('dailyQuestion').textContent="Today's worldwide question is loading…";$('dailyPrompt').textContent='One shared question. Your perspective belongs in the conversation.';
+ $('dailyQuestionAdmin').style.display=state.user&&state.user.uid===SPGUB_OFFICIAL_UID?'block':'none';
+ $('dailyAnswers').innerHTML='<div class="empty">Loading perspectives from around the world…</div>';
+ if(!dailyDb()){ $('dailyQuestion').textContent='Connect to SpGub to see today’s question.';return; }
+ loadWorldwideDailyQuestion();
+}
+async function loadWorldwideDailyQuestion(){
+ const d=dailyDb(),day=dailyUtcKey();state.dailyDay=day;
+ try{
+  const snap=await d.getDoc(dailyQuestionRef(day));
+  if(day!==dailyUtcKey())return;
+  if(!snap.exists()){
+   state.dailyQuestion=null;$('dailyQuestion').textContent="Today's question is being prepared.";$('dailyPrompt').textContent='SpGub Official will publish one question for everyone. Please check back soon.';
+   $('dailyMyAnswerStatus').textContent='There is no published question for today yet.';$('dailySubmitButton').disabled=true;$('dailyAnswers').innerHTML='<div class="empty">No answers yet. The worldwide conversation will begin when today’s question is published.</div>';
+  }else{
+   state.dailyQuestion={id:snap.id,...snap.data()};$('dailyQuestion').textContent=state.dailyQuestion.question||'A question for the world';$('dailyPrompt').textContent=state.dailyQuestion.prompt||'A question for people everywhere. Share your perspective.';$('dailySubmitButton').disabled=!state.user;
+   $('dailyMyAnswerStatus').textContent=state.user?'You can submit one answer and edit it later.':'Sign in to share your perspective. You can explore public answers without signing in.';
+   $('dailyAnswerText').value='';updateDailyAnswerCount();await loadDailyAnswers();
+  }
+ }catch(e){console.error('Daily question load',e);$('dailyQuestion').textContent='The worldwide question could not load.';$('dailyPrompt').textContent='Check your connection and try again.';$('dailyAnswers').innerHTML='<div class="empty">Could not load answers. Please refresh.</div>';}
+}
+async function submitDailyAnswer(){
+ const d=dailyDb(),q=state.dailyQuestion,text=$('dailyAnswerText').value.trim();
+ if(!state.user){openAuth();return}if(!q){toast('There is no published question today.');return}if(text.length<2){toast('Write a little more before sharing.');return}if(text.length>2000){toast('Your answer is too long.');return}
+ const button=$('dailySubmitButton');button.disabled=true;button.textContent='Sharing…';
+ try{
+  const ref=d.doc(d.db,'dailyQuestions',q.id,'answers',state.user.uid),name=state.profile?.displayName||state.user.displayName||'SpGub Explorer',country=state.profile?.country||'';
+  const existing=await d.getDoc(ref);const payload={authorUid:state.user.uid,authorName:name,username:state.profile?.username||'',country,text,updatedAt:d.serverTimestamp()};
+  if(!existing.exists()){payload.createdAt=d.serverTimestamp();payload.helpfulCount=0;}
+  await d.setDoc(ref,payload,{merge:true});
+  $('dailyAnswerText').value='';updateDailyAnswerCount();toast(existing.exists()?'Your answer has been updated.':'Your perspective has been shared with the world.');await loadDailyAnswers();
+ }catch(e){console.error('Daily answer save',e);toast('Could not share your answer: '+(e.code||'check your connection and Firestore rules'));}
+ finally{button.disabled=!state.user||!state.dailyQuestion;button.textContent='Share your perspective'}
+}
+function updateDailyAnswerCount(){const el=$('dailyAnswerText');if(el)$('dailyAnswerCount').textContent=el.value.length+' / 2000'}
+async function loadDailyAnswers(){
+ const d=dailyDb(),q=state.dailyQuestion;if(!q)return;
+ try{
+  const snap=await d.getDocs(d.query(d.collection(d.db,'dailyQuestions',q.id,'answers'),d.limit(150)));
+  const arr=snap.docs.map(x=>({id:x.id,...x.data()}));
+  if(state.user){await Promise.all(arr.map(async a=>{try{a.helpedByMe=(await d.getDoc(d.doc(d.db,'dailyQuestions',q.id,'answers',a.id,'helpful',state.user.uid))).exists()}catch(_){a.helpedByMe=false}}))}
+  state.dailyAnswers=arr;const mine=state.user?arr.find(a=>a.authorUid===state.user.uid):null;if(mine&&$('dailyAnswerText').value.trim()==='')$('dailyAnswerText').value=mine.text||'';updateDailyAnswerCount();$('dailyAnswerTotal').textContent=arr.length+' perspective'+(arr.length===1?'':'s');
+  const countries=[...new Set(arr.map(a=>String(a.country||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));const sel=$('dailyCountryFilter'),old=sel.value;sel.innerHTML='<option value="all">All countries</option>'+countries.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');if(countries.includes(old))sel.value=old;
+  renderDailyAnswers();
+ }catch(e){console.error('Daily answers load',e);$('dailyAnswers').innerHTML='<div class="empty">Answers could not be loaded. Check the Daily Question Firestore rules.</div>'}
+}
+function renderDailyAnswers(){
+ let arr=[...(state.dailyAnswers||[])],country=$('dailyCountryFilter')?.value||'all',sort=$('dailySortFilter')?.value||'newest';
+ if(country!=='all')arr=arr.filter(a=>String(a.country||'')===country);
+ arr.sort((a,b)=>sort==='helpful'?(Number(b.helpfulCount||0)-Number(a.helpfulCount||0)):(stamp(b.updatedAt||b.createdAt)-stamp(a.updatedAt||a.createdAt)));
+ $('dailyAnswers').innerHTML=arr.length?arr.map(a=>`<article class="daily-answer"><div class="daily-answer-meta"><b>${esc(a.authorName||'SpGub Explorer')}</b><span>${a.country?'🌍 '+esc(a.country):'🌍 Country not added'}</span><span>${stamp(a.createdAt)?new Date(stamp(a.createdAt)).toLocaleDateString():''}</span>${state.user&&a.authorUid===state.user.uid?'<span>· Your answer</span>':''}</div><div class="daily-answer-text">${esc(a.text||'')}</div><div class="daily-answer-actions"><button class="action ${a.helpedByMe?'active':''}" onclick="toggleDailyHelpful('${esc(a.id)}')">${a.helpedByMe?'✓ Helpful':'♡ Helpful'} · ${Number(a.helpfulCount||0)}</button>${state.user&&a.authorUid===state.user.uid?'<span class="muted">You can edit above</span>':''}</div></article>`).join(''):'<div class="empty">No answers for this filter yet. Be among the first to share a perspective.</div>';
+}
+function stamp(v){return v?.toMillis?.()|| (typeof v==='number'?v:0)}
+async function toggleDailyHelpful(answerUid){
+ if(!state.user){openAuth();return}const d=dailyDb(),q=state.dailyQuestion;if(!q||answerUid===state.user.uid)return;
+ const answerRef=d.doc(d.db,'dailyQuestions',q.id,'answers',answerUid),helpRef=d.doc(d.db,'dailyQuestions',q.id,'answers',answerUid,'helpful',state.user.uid);
+ try{
+  await d.runTransaction(d.db,async tx=>{const [a,h]=await Promise.all([tx.get(answerRef),tx.get(helpRef)]);if(!a.exists())throw new Error('Answer no longer exists');const count=Number(a.data().helpfulCount||0);if(h.exists()){tx.delete(helpRef);tx.update(answerRef,{helpfulCount:Math.max(0,count-1)});}else{tx.set(helpRef,{uid:state.user.uid,createdAt:d.serverTimestamp()});tx.update(answerRef,{helpfulCount:count+1});}});
+  const item=(state.dailyAnswers||[]).find(x=>x.id===answerUid);if(item){item.helpedByMe=!item.helpedByMe;item.helpfulCount=Math.max(0,Number(item.helpfulCount||0)+(item.helpedByMe?1:-1));}renderDailyAnswers();
+ }catch(e){console.error('Helpful reaction',e);toast('Could not update Helpful reaction. '+(e.code||''));}
+}
+async function refreshDailyAnswers(){await loadWorldwideDailyQuestion()}
+function openDailyAnswer(){if(!state.user){openAuth();return}$('dailyAnswerText').focus();window.scrollTo({top:$('dailyCard').offsetTop,behavior:'smooth'})}
+function shareDaily(){const q=state.dailyQuestion,t='SpGub · One World Daily Question: '+(q?.question||'Discover perspectives from around the world.');if(navigator.share)navigator.share({title:'SpGub Daily Question',text:t}).catch(()=>{});else if(navigator.clipboard?.writeText)navigator.clipboard.writeText(t).then(()=>toast('Question copied to clipboard.')).catch(()=>toast('Sharing is not available on this browser.'));else toast('Sharing is not available on this browser.')}
+async function publishDailyQuestion(){
+ if(!state.user||state.user.uid!==SPGUB_OFFICIAL_UID){toast('Only the official SpGub account can publish the Daily Question.');return}
+ const question=$('dailyAdminQuestion').value.trim(),prompt=$('dailyAdminPrompt').value.trim();if(question.length<8){toast('Write a complete question first.');return}
+ const d=dailyDb(),day=dailyUtcKey();try{const ref=d.doc(d.db,'dailyQuestions',day),existing=await d.getDoc(ref),payload={day,question,prompt,authorUid:state.user.uid,authorName:'SpGub Official',updatedAt:d.serverTimestamp()};if(!existing.exists())payload.createdAt=d.serverTimestamp();await d.setDoc(ref,payload,{merge:true});$('dailyAdminQuestion').value='';$('dailyAdminPrompt').value='';toast('Today’s worldwide question is published.');await loadWorldwideDailyQuestion()}catch(e){console.error('Publish Daily Question',e);toast('Could not publish. Check official account UID and Firestore rules.')}
+}
 function saveDraft(){const drafts=JSON.parse(localStorage.getItem('spgub_drafts')||'[]');drafts.unshift({kind:$('postKind').value,topic:$('postTopic').value,text:$('postText').value,a:$('optionA').value,b:$('optionB').value,at:Date.now()});localStorage.setItem('spgub_drafts',JSON.stringify(drafts.slice(0,20)));renderDrafts();toast('Private draft saved.')}
 function renderDrafts(){const d=JSON.parse(localStorage.getItem('spgub_drafts')||'[]');$('draftList').innerHTML=d.length?d.map((x,i)=>`<div class="card"><b>${esc(x.kind)}</b><p class="intro">${esc(x.text)}</p><button class="action" onclick="restoreDraft(${i})">Open draft</button><button class="action" onclick="deleteDraft(${i})">Delete</button></div>`).join(''):'<div class="empty">No private drafts yet.</div>'}
 function restoreDraft(i){const d=JSON.parse(localStorage.getItem('spgub_drafts')||'[]')[i];if(!d)return;$('postKind').value=d.kind;$('postTopic').value=d.topic||'';$('postText').value=d.text;$('optionA').value=d.a||'';$('optionB').value=d.b||'';composerTypeChanged();toast('Draft opened.')}
@@ -647,10 +736,12 @@ onAuthStateChanged(auth,async user=>{
   }
   updateAuthUI();
   if(user){
+    renderDaily();
     await Promise.all([followStats(),loadOwnReactions()]);
     loadInbox();
     renderProfile();
   }else{
+    renderDaily();
     state.following.clear();
     state.liked.clear();
     state.voted.clear();
